@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 artnet = { path = "../artnet" }
+logger = { path = "../logger" }
 tungstenite = "0.24.0"
