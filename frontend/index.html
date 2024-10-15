@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Example</title>
+</head>
+<body>
+    <h2>WebSocket Client</h2>
+    <div>
+        <label for="message">Message: </label>
+        <input type="text" id="message" placeholder="Enter your message">
+    </div>
+    <div>
+        <label for="arg1">Argument 1: </label>
+        <input type="text" id="arg1" placeholder="Enter Argument 1">
+    </div>
+    <div>
+        <label for="arg2">Argument 2: </label>
+        <input type="text" id="arg2" placeholder="Enter Argument 2">
+    </div>
+    <button id="sendBtn">Send to Server</button>
+
+    <h3>Messages from Server:</h3>
+    <div id="output"></div>
+
+    <script>
+        // Create a WebSocket connection to the server
+        const socket = new WebSocket('ws://localhost:3000');  // Replace with your server URL
+
+        // Connection opened
+        socket.addEventListener('open', function (event) {
+            console.log('Connected to the WebSocket server');
+        });
+
+        // Listen for messages from the server
+        socket.addEventListener('message', function (event) {
+            const output = document.getElementById('output');
+            output.innerHTML += `<p>Server: ${event.data}</p>`;
+        });
+
+        // Send message with arguments to the server
+        document.getElementById('sendBtn').addEventListener('click', function() {
+            const message = document.getElementById('message').value;
+            const arg1 = document.getElementById('arg1').value;
+            const arg2 = document.getElementById('arg2').value;
+
+            // Create an object to send multiple values
+            const dataToSend = {
+                message: message,
+                arg1: arg1,
+                arg2: arg2
+            };
+
+            // Send the data as a JSON string
+            socket.send(JSON.stringify(dataToSend));
+            console.log('Sent: ', dataToSend);
+        });
+
+        // Error handling
+        socket.addEventListener('error', function(event) {
+            console.error('WebSocket error: ', event);
+        });
+
+        // Connection closed
+        socket.addEventListener('close', function(event) {
+            console.log('WebSocket connection closed');
+        });
+    </script>
+</body>
+</html>

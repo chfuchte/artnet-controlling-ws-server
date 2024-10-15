@@ -1,4 +1,4 @@
-use crate::artnet::package::build_artnet_package;
+use crate::package::build_artnet_package;
 use std::net::UdpSocket;
 
 /// Creates an udp socket to send artnet packages
