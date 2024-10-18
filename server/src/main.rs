@@ -2,7 +2,7 @@ use artnet::{create_socket, ArtNetClient};
 use logger::{debug, warning};
 use std::{borrow::BorrowMut, net::TcpListener};
 use tungstenite::accept;
-use wshandlers::handle_websocket_message;
+use wshandlers::{handle_websocket_message, WebsocketHandlingError};
 
 mod wshandlers;
 
@@ -29,20 +29,27 @@ fn main() {
                 continue;
             }
 
-            let data_str = msg.to_text().expect("failed to convert message to string");
+            let ws_msg_str = msg.to_text().expect("failed to convert message to string");
 
-            debug(&format!("Received: {}", data_str));
+            debug(&format!("websocket message recieved: {}", ws_msg_str));
 
-            let handling_result = handle_websocket_message(data_str, artnet_client.borrow_mut());
+            let handling_result = handle_websocket_message(ws_msg_str, artnet_client.borrow_mut());
 
             if handling_result.is_err() {
-                let err_str = handling_result.err().unwrap().to_string();
-
-                warning(&err_str);
-
-                websocket
-                    .send(err_str.into())
-                    .expect("failed to send a response to the client");
+                match handling_result.err().unwrap() {
+                    WebsocketHandlingError::IoError(err) => {
+                        warning(&format!("IO error: {}", err));
+                        websocket
+                            .send(err.to_string().into())
+                            .expect("failed to send a response to the client");
+                    }
+                    WebsocketHandlingError::UnknownMessage(err_str) => {
+                        warning(&err_str);
+                        websocket
+                            .send(err_str.into())
+                            .expect("failed to send a response to the client");
+                    }
+                }
             } else {
                 websocket
                     .send("OK".into())

@@ -1,8 +1,24 @@
 use artnet::ArtNetClient;
 
-// TODO
-pub fn handle_websocket_message(_data: &str, client: &mut ArtNetClient<'_>) -> Result<(), std::io::Error> {
-    // TODO
-    client.set_single(0, 0);
-    Ok(())
+pub enum WebsocketHandlingError {
+    IoError(std::io::Error),
+    UnknownMessage(String),
+}
+
+pub fn handle_websocket_message(msg: &str, client: &mut ArtNetClient<'_>) -> Result<(), WebsocketHandlingError> {
+    match msg {
+        "all::dimmer::full" => {
+            client.set_single(0, 255);
+            client.set_single(10, 255);
+            client.commit().map_err(WebsocketHandlingError::IoError)
+        }
+        "all::dimmer::off" => {
+            client.set_single(0, 0);
+            client.set_single(10, 0);
+            client.commit().map_err(WebsocketHandlingError::IoError)
+        }
+        _ => {
+            Err(WebsocketHandlingError::UnknownMessage(format!("Unknown message: {}", msg)))
+        }
+    }
 }
