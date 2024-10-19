@@ -4,7 +4,7 @@ use std::net::UdpSocket;
 /// Creates an udp socket to send artnet packages
 /// # Example
 /// ```rust
-/// use artnet::socket::create_socket;
+/// use artnet::create_socket;
 /// 
 /// let send_artnet = create_socket("0.0.0.0:6454".to_string(), "255.255.255.255:6454".to_string(), true).unwrap();
 /// send_artnet(&0, &[255; 512], None).unwrap(); // send to the default address
