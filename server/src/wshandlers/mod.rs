@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use artnet::ArtNetClient;
 
 pub enum WebsocketHandlingError {
@@ -5,7 +7,10 @@ pub enum WebsocketHandlingError {
     UnknownMessage(String),
 }
 
-pub fn handle_websocket_message(msg: &str, client: &mut ArtNetClient<'_>) -> Result<(), WebsocketHandlingError> {
+pub fn handle_websocket_message(
+    msg: &str,
+    client: Arc<ArtNetClient>,
+) -> Result<(), WebsocketHandlingError> {
     match msg {
         "all::dimmer::full" => {
             client.set_single(0, 255);
@@ -17,8 +22,9 @@ pub fn handle_websocket_message(msg: &str, client: &mut ArtNetClient<'_>) -> Res
             client.set_single(10, 0);
             client.commit().map_err(WebsocketHandlingError::IoError)
         }
-        _ => {
-            Err(WebsocketHandlingError::UnknownMessage(format!("Unknown message: {}", msg)))
-        }
+        _ => Err(WebsocketHandlingError::UnknownMessage(format!(
+            "Unknown message: {}",
+            msg
+        ))),
     }
 }
