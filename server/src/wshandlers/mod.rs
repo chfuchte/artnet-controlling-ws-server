@@ -1,6 +1,6 @@
-use std::sync::Arc;
-
 use artnet::ArtNetClient;
+use config::Fixture;
+use std::{collections::HashMap, sync::Arc};
 
 pub enum WebsocketHandlingError {
     IoError(std::io::Error),
@@ -10,6 +10,7 @@ pub enum WebsocketHandlingError {
 pub fn handle_websocket_message(
     msg: &str,
     client: Arc<ArtNetClient>,
+    _fixtures: Arc<HashMap<String, Fixture>>,
 ) -> Result<(), WebsocketHandlingError> {
     match msg {
         "all::dimmer::full" => {

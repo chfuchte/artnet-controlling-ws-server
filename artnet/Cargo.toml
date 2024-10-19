@@ -1,5 +1,6 @@
 [package]
-name = "artnet"
+name = "artnet"#
+description = "provides a simple, thread-safe interface to send Art-Net packets via an UDP socket"
 version = "0.1.0"
 edition = "2021"
 
