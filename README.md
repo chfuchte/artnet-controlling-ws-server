@@ -46,6 +46,13 @@ fixtures:
     - name: any name you want to give to the fixture
       type: name of the fixture type (needs to be present in fixture_types)
       start_addr: 1
+bindings:
+    - identifier: any unique identifier
+      actions:
+          - fixture.channel: 255 # any value (u8) between 0 and 255
+    - identifier: something{variable} # something{255}, something{0}, ... would be valid and placed as the value
+      actions:
+          - fixture.channel: "{variable}"
 ```
 
 ## License

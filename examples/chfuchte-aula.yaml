@@ -267,3 +267,5 @@ fixtures:
     - name: par_front_right
       start_addr: 254
       type: PAR64
+
+bindings:
