@@ -1,5 +1,6 @@
 [package]
 name = "server"
+description = "a websocket-server to control lighting fixtures via artnet"
 version = "0.1.0"
 edition = "2021"
 

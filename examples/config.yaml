@@ -1,3 +1,4 @@
+# @copyright 2024, Christian Fuchte
 fixture_types:
     - name: Singlechannel
       channels:
