@@ -5,6 +5,10 @@ use std::{fs::read_to_string, net::TcpListener, sync::Arc, thread};
 use tungstenite::accept;
 use wshandlers::{handle_websocket_message, WebsocketHandlingError};
 
+#[cfg(test)]
+mod test;
+
+mod config;
 mod wshandlers;
 
 fn main() {
@@ -15,8 +19,10 @@ fn main() {
         config_file_path.ends_with(".yaml"),
         "config file must be a yaml file"
     );
-    let config_file_content_str = read_to_string(&config_file_path).expect("failed to read config file");
-    let fixtures = Arc::new(parse_yaml_into(&config_file_content_str).expect("invalid config file"));
+    let config_file_content_str =
+        read_to_string(&config_file_path).expect("failed to read config file");
+    let fixtures =
+        Arc::new(parse_yaml_into(&config_file_content_str).expect("invalid config file"));
 
     dbg!(&fixtures);
 

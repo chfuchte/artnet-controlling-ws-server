@@ -2,18 +2,18 @@ use serde::Deserialize;
 use serde_yaml::Error;
 use std::collections::HashMap;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct YAMLChannel {
     name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct YAMLFixtureType {
     name: String,
     channels: Vec<YAMLChannel>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct YAMLFixture {
     name: String,
     start_addr: u16,
@@ -21,7 +21,7 @@ struct YAMLFixture {
     fixture_type: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct YAMLConfig {
     fixture_types: Vec<YAMLFixtureType>,
     fixtures: Vec<YAMLFixture>,
@@ -34,7 +34,7 @@ pub struct Fixture {
 }
 
 impl Fixture {
-    pub(in self) fn new(identifier: &str, start_addr: u16, fixture_type: &YAMLFixtureType) -> Fixture {
+    pub(self) fn new(identifier: &str, start_addr: u16, fixture_type: &YAMLFixtureType) -> Fixture {
         let mut channels: HashMap<String, u16> = HashMap::new();
         for (i, channel) in fixture_type.channels.iter().enumerate() {
             channels.insert(channel.name.clone(), start_addr + i as u16);
@@ -73,7 +73,9 @@ pub fn parse_yaml_into(yaml: &str) -> Result<HashMap<String, Fixture>, Error> {
             Fixture::new(
                 &fixture.name,
                 fixture.start_addr,
-                &fixture_types_map.get(&fixture.fixture_type).expect("fixture type not found"),
+                &fixture_types_map
+                    .get(&fixture.fixture_type)
+                    .expect("fixture type not found"),
             ),
         );
     }

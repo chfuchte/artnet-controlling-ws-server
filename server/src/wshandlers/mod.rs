@@ -1,5 +1,5 @@
 use artnet::ArtNetClient;
-use config::Fixture;
+use crate::config::Fixture;
 use std::{collections::HashMap, sync::Arc};
 
 pub enum WebsocketHandlingError {

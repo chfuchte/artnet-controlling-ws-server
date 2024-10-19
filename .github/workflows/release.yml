@@ -1,0 +1,57 @@
+name: Prebuilts on Release
+
+permissions:
+    contents: write
+
+on:
+    release:
+        types: [created]
+
+jobs:
+    create-release:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: taiki-e/create-gh-release-action@v1
+              with:
+                  changelog: CHANGELOG.md
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+    upload-assets:
+        needs: create-release
+        strategy:
+            matrix:
+                include:
+                    # Mac OS
+                    - target: aarch64-apple-darwin # Apple Silicon
+                      os: macos-latest
+                    - target: x86_64-apple-darwin # Intel
+                      os: macos-latest
+                    - target: universal-apple-darwin # Universal
+                      os: macos-latest
+                    # Windows
+                    - target: x86_64-pc-windows-msvc # 64-bit
+                      os: windows-latest
+                    - target: i686-pc-windows-msvc # 32-bit
+                      os: windows-latest
+                    - target: aarch64-pc-windows-msvc # ARM64
+                      os: windows-latest
+                    # Linux
+                    - target: x86_64-unknown-linux-gnu # 64-bit
+                      os: ubuntu-latest
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v4
+            - name: Install cross-compilation tools
+              uses: taiki-e/setup-cross-toolchain-action@v1
+              with:
+                  target: ${{ matrix.target }}
+            - uses: taiki-e/upload-rust-binary-action@v1
+              with:
+                  bin: cwalloc
+                  target: ${{ matrix.target }}
+                  tar: unix
+                  zip: windows
+                  checksum: sha256
+                  include: LICENSE.txt,README.md,CHANGELOG.md
+                  token: ${{ secrets.GITHUB_TOKEN }}

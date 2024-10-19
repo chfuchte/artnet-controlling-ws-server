@@ -1,0 +1,268 @@
+fixture_types:
+    - name: Singlechannel
+      channels:
+          - name: Power
+            type: binary
+    - name: CW/WW
+      channels:
+          - name: Cold White
+            type: fader
+          - name: Warm White
+            type: fader
+          - name: Dimmer
+            type: fader
+          - name: Strobe
+            type: fader
+          - name: Color Temperature
+            type: fader
+    - name: RevueLED
+      channels:
+          - name: Dimmer
+            type: fader
+          - name: Strobe
+            type: fader
+    - name: MHx200
+      channels:
+          - name: Pan
+            type: pan
+          - name: Tilt
+            type: tilt
+          - name: Fine Pan
+            type: fine_pan
+          - name: Fine Tilt
+            type: fine_tilt
+          - name: Pan Tilt Speed
+            type: fader
+          - name: Colorwheel
+            type: fader
+          - name: Shutter
+            type: fader
+          - name: Dimmer
+            type: fader
+          - name: Gobo 1
+            type: fader
+          - name: Gobo Rotation
+            type: fader
+          - name: Gobo 2
+            type: fader
+          - name: Focus
+            type: fader
+          - name: Iris
+            type: fader
+          - name: Prism
+            type: fader
+          - name: Function
+            type: fader
+          - name: Effect
+            type: fader
+    - name: MHz1915
+      channels:
+          - name: Pan
+            type: pan
+          - name: Tilt
+            type: tilt
+          - name: Pan Tilt Speed
+            type: fader
+          - name: Red
+            type: red
+          - name: Green
+            type: green
+          - name: Blue
+            type: blue
+          - name: White
+            type: white
+          - name: Light Effect
+            type: fader
+          - name: Light Effect Speed
+            type: fader
+          - name: Dimmer
+            type: fader
+          - name: Shutter
+            type: fader
+          - name: Zoom
+            type: fader
+          - name: Function
+            type: fader
+          - name: Pan Tilt Effect
+            type: fader
+    - name: PAR64
+      channels:
+          - name: Red
+            type: red
+          - name: Green
+            type: green
+          - name: Blue
+            type: blue
+          - name: White
+            type: white
+          - name: CTO
+            type: fader
+          - name: Strobe
+            type: fader
+          - name: Function
+            type: fader
+          - name: Dimmer
+            type: fader
+    - name: w648
+      channels:
+          - name: Dimmer
+            type: fader
+          - name: Strobe
+            type: fader
+          - name: Red
+            type: red
+          - name: Green
+            type: green
+          - name: Blue
+            type: blue
+          - name: Function
+            type: fader
+
+fixtures:
+    - name: singlechannel_01
+      start_addr: 1
+      type: Singlechannel
+    - name: singlechannel_02
+      start_addr: 2
+      type: Singlechannel
+    - name: singlechannel_03
+      start_addr: 3
+      type: Singlechannel
+    - name: singlechannel_04
+      start_addr: 4
+      type: Singlechannel
+    - name: singlechannel_05
+      start_addr: 5
+      type: Singlechannel
+    - name: singlechannel_06
+      start_addr: 6
+      type: Singlechannel
+    - name: singlechannel_07
+      start_addr: 7
+      type: Singlechannel
+    - name: singlechannel_08
+      start_addr: 8
+      type: Singlechannel
+    - name: singlechannel_09
+      start_addr: 9
+      type: Singlechannel
+    - name: singlechannel_10
+      start_addr: 10
+      type: Singlechannel
+    - name: singlechannel_11
+      start_addr: 11
+      type: Singlechannel
+    - name: singlechannel_12
+      start_addr: 12
+      type: Singlechannel
+    - name: singlechannel_13
+      start_addr: 13
+      type: Singlechannel
+    - name: singlechannel_14
+      start_addr: 14
+      type: Singlechannel
+    - name: singlechannel_15
+      start_addr: 15
+      type: Singlechannel
+    - name: singlechannel_16
+      start_addr: 16
+      type: Singlechannel
+    - name: singlechannel_17
+      start_addr: 17
+      type: Singlechannel
+    - name: singlechannel_18
+      start_addr: 18
+      type: Singlechannel
+    - name: singlechannel_19
+      start_addr: 19
+      type: Singlechannel
+    - name: singlechannel_20
+      start_addr: 20
+      type: Singlechannel
+    - name: singlechannel_21
+      start_addr: 21
+      type: Singlechannel
+    - name: singlechannel_22
+      start_addr: 22
+      type: Singlechannel
+    - name: singlechannel_23
+      start_addr: 23
+      type: Singlechannel
+    - name: singlechannel_24
+      start_addr: 24
+      type: Singlechannel
+
+    - name: spot_left
+      start_addr: 25
+      type: MHx200
+    - name: spot_right
+      start_addr: 41
+      type: MHx200
+
+    - name: wash_right
+      start_addr: 61
+      type: MHz1915
+    - name: wash_left
+      start_addr: 134
+      type: MHz1915
+
+    - name: strobe_front_left
+      start_addr: 200
+      type: w648
+    - name: strobe_front_mid
+      start_addr: 206
+      type: w648
+    - name: strobe_front_right
+      start_addr: 212
+      type: w648
+    - name: strobe_back_left
+      start_addr: 218
+      type: w648
+    - name: strobe_back_right
+      start_addr: 224
+      type: w648
+
+    - name: cwww_right
+      start_addr: 100
+      type: CW/WW
+    - name: cwww_left
+      start_addr: 105
+      type: CW/WW
+
+    - name: profile_right
+      start_addr: 76
+      type: RevueLED
+    - name: profile_left
+      start_addr: 132
+      type: RevueLED
+
+    - name: par_stage_left_bottom
+      start_addr: 150
+      type: PAR64
+    - name: par_stage_left_mid
+      start_addr: 158
+      type: PAR64
+    - name: par_stage_left_top
+      start_addr: 166
+      type: PAR64
+    - name: par_stage_right_bottom
+      start_addr: 174
+      type: PAR64
+    - name: par_stage_right_mid
+      start_addr: 182
+      type: PAR64
+    - name: par_stage_right_top
+      start_addr: 190
+      type: PAR64
+    - name: par_front_left
+      start_addr: 246
+      type: PAR64
+    - name: par_front_mid_left
+      start_addr: 230
+      type: PAR64
+    - name: par_front_mid_right
+      start_addr: 238
+      type: PAR64
+    - name: par_front_right
+      start_addr: 254
+      type: PAR64

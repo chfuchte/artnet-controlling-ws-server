@@ -6,5 +6,6 @@ edition = "2021"
 [dependencies]
 artnet = { path = "../artnet" }
 logger = { path = "../logger" }
-config = { path = "../config" }
 tungstenite = "0.24.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9.34"

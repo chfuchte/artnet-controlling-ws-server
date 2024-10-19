@@ -1,4 +1,4 @@
-use crate::parse_yaml_into;
+use crate::config::parse_yaml_into;
 
 #[test]
 fn test_parse_yaml_into() {
