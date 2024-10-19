@@ -48,7 +48,7 @@ jobs:
                   target: ${{ matrix.target }}
             - uses: taiki-e/upload-rust-binary-action@v1
               with:
-                  bin: cwalloc
+                  bin: server
                   target: ${{ matrix.target }}
                   tar: unix
                   zip: windows
