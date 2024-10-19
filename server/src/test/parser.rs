@@ -15,7 +15,7 @@ fn test_parse_yaml_into() {
 
     let result = parse_yaml_into(&yaml);
     assert!(result.is_ok());
-    let map = result.unwrap();
+    let (map, _) = result.unwrap();
     assert!(map.get("Fixture1").is_some());
     assert!(map.get("Fixture1").unwrap().get_identifier() == "Fixture1");
     assert!(map.get("Fixture1").unwrap().get_channel_addr("Channel1") == 1);

@@ -1,0 +1,36 @@
+# @copyright 2024, Christian Fuchte
+fixture_types:
+    - name: PAR64
+      channels:
+          - name: Red
+            type: red
+          - name: Green
+            type: green
+          - name: Blue
+            type: blue
+          - name: White
+            type: white
+          - name: CTO
+            type: fader
+          - name: Strobe
+            type: fader
+          - name: Function
+            type: fader
+          - name: Dimmer
+            type: fader
+
+fixtures:
+    - name: par64_1
+      start_addr: 150
+      type: PAR64
+
+bindings:
+    - identifier: stage::color::white
+      actions:
+          - par64_1.White: 255
+          - par64_1.Red: 0
+          - par64_1.Green: 0
+          - par64_1.Blue: 0
+    - identifier: stage::dimmer::{dim_val}
+      actions:
+          - par64_1.Dimmer: "{dim_val}"

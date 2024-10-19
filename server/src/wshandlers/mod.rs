@@ -1,5 +1,5 @@
+use crate::config::{Binding, Fixture};
 use artnet::ArtNetClient;
-use crate::config::Fixture;
 use std::{collections::HashMap, sync::Arc};
 
 pub enum WebsocketHandlingError {
@@ -11,6 +11,7 @@ pub fn handle_websocket_message(
     msg: &str,
     client: Arc<ArtNetClient>,
     _fixtures: Arc<HashMap<String, Fixture>>,
+    _bindings: Arc<HashMap<String, Binding>>,
 ) -> Result<(), WebsocketHandlingError> {
     match msg {
         "all::dimmer::full" => {

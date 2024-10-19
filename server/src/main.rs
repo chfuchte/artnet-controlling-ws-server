@@ -21,10 +21,11 @@ fn main() {
     );
     let config_file_content_str =
         read_to_string(&config_file_path).expect("failed to read config file");
-    let fixtures =
-        Arc::new(parse_yaml_into(&config_file_content_str).expect("invalid config file"));
+    let (fixtures, bindings) =
+        parse_yaml_into(&config_file_content_str).expect("invalid config file");
 
-    dbg!(&fixtures);
+    let fixtures = Arc::new(fixtures);
+    let bindings = Arc::new(bindings);
 
     let tcp_server = TcpListener::bind("0.0.0.0:3000").unwrap();
     let send_via_artnet_udp_socket = Arc::new(
@@ -48,6 +49,7 @@ fn main() {
     for tcp_stream in tcp_server.incoming() {
         let artnet_client_current_thread_clone = Arc::clone(&artnet_client);
         let fixtures_current_thread_clone = Arc::clone(&fixtures);
+        let bindings_current_thread_clone = Arc::clone(&bindings);
 
         thread::spawn(move || {
             let mut websocket = accept(tcp_stream.unwrap()).unwrap();
@@ -67,6 +69,7 @@ fn main() {
                     ws_msg_str,
                     artnet_client_current_thread_clone.clone(),
                     fixtures_current_thread_clone.clone(),
+                    bindings_current_thread_clone.clone(),
                 );
 
                 if handling_result.is_err() {

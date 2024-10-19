@@ -21,10 +21,18 @@ struct YAMLFixture {
     fixture_type: String,
 }
 
+#[derive(Deserialize, Debug)]
+struct YAMLBinding {
+    identifier: String,
+    /// fixture.channel -> value
+    actions: Vec<HashMap<String, String>>,
+}
+
 #[derive(Deserialize)]
 struct YAMLConfig {
     fixture_types: Vec<YAMLFixtureType>,
     fixtures: Vec<YAMLFixture>,
+    bindings: Vec<YAMLBinding>,
 }
 
 #[derive(Debug)]
@@ -58,8 +66,34 @@ impl Fixture {
     }
 }
 
-pub fn parse_yaml_into(yaml: &str) -> Result<HashMap<String, Fixture>, Error> {
+pub struct Binding {
+    identifier: String,
+    actions: Vec<[String; 2]>,
+}
+
+impl Binding {
+    pub fn new(identifier: &str, actions: Vec<[String; 2]>) -> Binding {
+        Binding {
+            identifier: identifier.to_string(),
+            actions,
+        }
+    }
+
+    pub fn get_identifier(&self) -> &str {
+        &self.identifier
+    }
+
+    pub fn get_actions(&self) -> &Vec<[String; 2]> {
+        &self.actions
+    }
+}
+
+pub fn parse_yaml_into(
+    yaml: &str,
+) -> Result<(HashMap<String, Fixture>, HashMap<String, Binding>), Error> {
     let config: YAMLConfig = serde_yaml::from_str(yaml).expect("Failed to parse YAML");
+
+    dbg!(&config.bindings);
 
     let mut fixture_types_map: HashMap<String, YAMLFixtureType> = HashMap::new();
     for fixture_type in config.fixture_types {
@@ -80,5 +114,20 @@ pub fn parse_yaml_into(yaml: &str) -> Result<HashMap<String, Fixture>, Error> {
         );
     }
 
-    Ok(fixtures_map)
+    let mut bindings_map: HashMap<String, Binding> = HashMap::new();
+    for binding in config.bindings {
+        let mut actions: Vec<[String; 2]> = Vec::new();
+        for action in binding.actions {
+            actions.push([
+                action.keys().next().unwrap().clone(),
+                action.values().next().unwrap().clone(),
+            ]);
+        }
+        bindings_map.insert(
+            binding.identifier.clone(),
+            Binding::new(&binding.identifier, actions),
+        );
+    }
+
+    Ok((fixtures_map, bindings_map))
 }
