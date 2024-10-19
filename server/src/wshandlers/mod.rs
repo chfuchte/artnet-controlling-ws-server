@@ -1,32 +1,4 @@
-use crate::config::{Binding, Fixture};
-use artnet::ArtNetClient;
-use std::{collections::HashMap, sync::Arc};
+pub mod parse_variable;
+mod handler;
 
-pub enum WebsocketHandlingError {
-    IoError(std::io::Error),
-    UnknownMessage(String),
-}
-
-pub fn handle_websocket_message(
-    msg: &str,
-    client: Arc<ArtNetClient>,
-    _fixtures: Arc<HashMap<String, Fixture>>,
-    _bindings: Arc<HashMap<String, Binding>>,
-) -> Result<(), WebsocketHandlingError> {
-    match msg {
-        "all::dimmer::full" => {
-            client.set_single(0, 255);
-            client.set_single(10, 255);
-            client.commit().map_err(WebsocketHandlingError::IoError)
-        }
-        "all::dimmer::off" => {
-            client.set_single(0, 0);
-            client.set_single(10, 0);
-            client.commit().map_err(WebsocketHandlingError::IoError)
-        }
-        _ => Err(WebsocketHandlingError::UnknownMessage(format!(
-            "Unknown message: {}",
-            msg
-        ))),
-    }
-}
+pub use handler::{handle_websocket_message, WebsocketHandlingError};

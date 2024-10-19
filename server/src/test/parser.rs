@@ -11,6 +11,7 @@ fn test_parse_yaml_into() {
         - name: Fixture1
           type: FixtureType1
           start_addr: 1
+        bindings:
     "#;
 
     let result = parse_yaml_into(&yaml);
@@ -18,5 +19,5 @@ fn test_parse_yaml_into() {
     let (map, _) = result.unwrap();
     assert!(map.get("Fixture1").is_some());
     assert!(map.get("Fixture1").unwrap().get_identifier() == "Fixture1");
-    assert!(map.get("Fixture1").unwrap().get_channel_addr("Channel1") == 1);
+    assert!(map.get("Fixture1").unwrap().get_channel_addr("Channel1").unwrap() == &1);
 }

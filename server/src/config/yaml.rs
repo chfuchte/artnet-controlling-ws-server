@@ -37,6 +37,7 @@ struct YAMLConfig {
 
 #[derive(Debug)]
 pub struct Fixture {
+    #[allow(dead_code)]
     identifier: String,
     channels: HashMap<String, u16>,
 }
@@ -53,19 +54,18 @@ impl Fixture {
         }
     }
 
+    #[allow(dead_code)]
+    // used in wshandlers::mod.rs
     pub fn get_identifier(&self) -> &str {
         &self.identifier
     }
 
-    pub fn get_channel_addr(&self, channel_name: &str) -> u16 {
-        *self.channels.get(channel_name).unwrap()
-    }
-
-    pub fn get_channels(&self) -> &HashMap<String, u16> {
-        &self.channels
+    pub fn get_channel_addr(&self, channel_name: &str) -> Option<&u16> {
+        self.channels.get(channel_name)
     }
 }
 
+#[derive(Debug)]
 pub struct Binding {
     identifier: String,
     actions: Vec<[String; 2]>,
@@ -92,8 +92,6 @@ pub fn parse_yaml_into(
     yaml: &str,
 ) -> Result<(HashMap<String, Fixture>, HashMap<String, Binding>), Error> {
     let config: YAMLConfig = serde_yaml::from_str(yaml).expect("Failed to parse YAML");
-
-    dbg!(&config.bindings);
 
     let mut fixture_types_map: HashMap<String, YAMLFixtureType> = HashMap::new();
     for fixture_type in config.fixture_types {
