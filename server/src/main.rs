@@ -3,13 +3,13 @@ use config::parse_yaml_into;
 use logger::{debug, warning};
 use std::{fs::read_to_string, net::TcpListener, sync::Arc, thread};
 use tungstenite::accept;
-use wshandlers::{handle_websocket_message, WebsocketHandlingError};
+use handlers::{handle_websocket_message, WebsocketHandlingError};
 
 #[cfg(test)]
 mod test;
 
 mod config;
-mod wshandlers;
+mod handlers;
 
 fn main() {
     let config_file_path = std::env::args()

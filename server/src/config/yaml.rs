@@ -1,21 +1,30 @@
+use crate::config::binding::Binding;
+use crate::config::fixture::Fixture;
+use crate::config::schema::{YAMLBinding, YAMLConfig, YAMLFixture, YAMLFixtureType};
 use serde_yaml::Error;
 use std::collections::HashMap;
-use crate::config::schema::{YAMLConfig, YAMLFixtureType};
-use crate::config::fixture::Fixture;
-use crate::config::binding::Binding;
 
 pub fn parse_yaml_into(
     yaml: &str,
 ) -> Result<(HashMap<String, Fixture>, HashMap<String, Binding>), Error> {
     let config: YAMLConfig = serde_yaml::from_str(yaml).expect("Failed to parse YAML");
 
+    let fixtures_map = remap_fixtures(config.fixtures, config.fixture_types);
+    let bindings_map: HashMap<String, Binding> = remap_bindings(config.bindings);
+
+    Ok((fixtures_map, bindings_map))
+}
+
+fn remap_fixtures(
+    fixtures: Vec<YAMLFixture>,
+    fixture_types: Vec<YAMLFixtureType>,
+) -> HashMap<String, Fixture> {
     let mut fixture_types_map: HashMap<String, YAMLFixtureType> = HashMap::new();
-    for fixture_type in config.fixture_types {
+    for fixture_type in fixture_types {
         fixture_types_map.insert(fixture_type.name.clone(), fixture_type);
     }
-
     let mut fixtures_map: HashMap<String, Fixture> = HashMap::new();
-    for fixture in config.fixtures {
+    for fixture in fixtures {
         fixtures_map.insert(
             fixture.name.clone(),
             Fixture::new(
@@ -27,9 +36,12 @@ pub fn parse_yaml_into(
             ),
         );
     }
+    fixtures_map
+}
 
+fn remap_bindings(bindings: Vec<YAMLBinding>) -> HashMap<String, Binding> {
     let mut bindings_map: HashMap<String, Binding> = HashMap::new();
-    for binding in config.bindings {
+    for binding in bindings {
         let mut actions: Vec<[String; 2]> = Vec::new();
         for action in binding.actions {
             actions.push([
@@ -42,6 +54,5 @@ pub fn parse_yaml_into(
             Binding::new(&binding.identifier, actions),
         );
     }
-
-    Ok((fixtures_map, bindings_map))
+    bindings_map
 }

@@ -1,4 +1,4 @@
-use crate::wshandlers::parse_variable::extract_variables;
+use crate::handlers::parse_variable::extract_variables;
 
 #[test]
 fn test_extract_variable() {

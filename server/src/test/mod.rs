@@ -1,2 +1,2 @@
 mod parser;
-mod bindings;
+mod variable_extraction;
