@@ -13,13 +13,18 @@ mod test;
 mod handlers;
 
 fn main() -> Result<(), Error> {
-    let config_file_path = std::env::args()
-        .nth(1)
-        .expect("no config file path provided");
-    assert!(
-        config_file_path.ends_with(".yaml"),
-        "config file must be a yaml file"
-    );
+    let config_file_path = std::env::args().nth(1);
+    if config_file_path.is_none() {
+        error("please provide a config file path as the first argument");
+        panic!("no config file path provided");
+    }
+    let config_file_path = config_file_path.unwrap();
+    if config_file_path.ends_with(".yaml") || config_file_path.ends_with(".yml") {
+        debug(&format!("config file path: {}", config_file_path));
+    } else {
+        error("config file must be a yaml file");
+        panic!("config file must be a yaml file");
+    }
 
     let (fixtures, bindings, configuration) = read_parse_config_file(&config_file_path);
 
@@ -148,7 +153,15 @@ fn read_parse_config_file(
     Config,
 ) {
     let config_file_content_str =
-        read_to_string(&config_file_path).expect("failed to read config file");
+        read_to_string(&config_file_path);
+    if config_file_content_str.is_err() {
+        error(&format!(
+            "failed to read config file: {}",
+            config_file_content_str.err().unwrap()
+        ));
+        panic!("failed to read config file");
+    }
+    let config_file_content_str = config_file_content_str.unwrap();
     let (fixtures, bindings, config) = match parse_yaml_into(&config_file_content_str) {
         Ok(result) => {
             debug("successfully parsed config file");
