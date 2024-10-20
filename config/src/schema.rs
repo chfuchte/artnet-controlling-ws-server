@@ -36,6 +36,7 @@ pub(crate) struct SchemaConfig {
 #[derive(Deserialize, Debug)]
 pub(crate) struct SchemaConfigServer {
     pub binds: String,
+    pub allow_direct_fixture_control: Option<bool>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -44,6 +45,7 @@ pub(crate) struct SchemaConfigArtNet {
     pub sends: String,
     pub universe: u16,
     pub broadcast: bool,
+    pub send_every_ms: Option<u64>,
 }
 
 #[derive(Deserialize, Debug)]

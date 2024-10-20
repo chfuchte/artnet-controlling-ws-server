@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug / Testing</title>
+</head>
+
+<body>
+    <h2>WebSocket Client</h2>
+    <div>
+        <label for="message">Message: </label>
+        <input type="text" id="message" placeholder="Enter your message">
+    </div>
+    <button id="sendBtn">Send to Server</button>
+
+    <h3>Messages from Server:</h3>
+    <div id="output"></div>
+
+    <script>
+        // Create a WebSocket connection to the server
+        const socket = new WebSocket('ws://localhost:3000');  // Replace with your server URL
+
+        // Connection opened
+        socket.addEventListener('open', function (event) {
+            console.log('Connected to the WebSocket server');
+        });
+
+        // Listen for messages from the server
+        socket.addEventListener('message', function (event) {
+            const output = document.getElementById('output');
+            output.innerHTML += `<p>Server: ${event.data}</p>`;
+        });
+
+        // Send message with arguments to the server
+        document.getElementById('sendBtn').addEventListener('click', function () {
+            const message = document.getElementById('message').value;
+
+            socket.send(message);
+            console.log('Sent: ', message);
+        });
+
+        // Error handling
+        socket.addEventListener('error', function (event) {
+            console.error('WebSocket error: ', event);
+        });
+
+        // Connection closed
+        socket.addEventListener('close', function (event) {
+            console.log('WebSocket connection closed');
+        });
+    </script>
+</body>
+
+</html>

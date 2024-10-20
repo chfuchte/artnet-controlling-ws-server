@@ -26,6 +26,14 @@ impl Config {
     pub fn get_artnet_broadcast(&self) -> bool {
         self.artnet.broadcast
     }
+
+    pub fn get_allow_direct_fixture_control(&self) -> bool {
+        self.server.allow_direct_fixture_control.unwrap_or(false)
+    }
+
+    pub fn get_send_every_ms(&self) -> Option<u64> {
+        self.artnet.send_every_ms
+    }
 }
 
 pub fn map_config(config: SchemaConfig) -> Config {
