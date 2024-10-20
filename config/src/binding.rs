@@ -1,5 +1,8 @@
-use crate::schema::SchemaBinding;
-use std::collections::HashMap;
+use crate::{schema::SchemaBinding, Fixture};
+use std::{
+    collections::HashMap,
+    fmt::{Debug, Error},
+};
 
 #[derive(Debug)]
 pub struct Binding {
@@ -24,20 +27,46 @@ impl Binding {
     }
 }
 
-pub fn remap_bindings(bindings: Vec<SchemaBinding>) -> HashMap<String, Binding> {
+pub fn remap_bindings(
+    bindings: Vec<SchemaBinding>,
+    fixtures: &HashMap<String, Fixture>,
+) -> Result<HashMap<String, Binding>, Error> {
     let mut bindings_map: HashMap<String, Binding> = HashMap::new();
+
     for binding in bindings {
         let mut actions: Vec<[String; 2]> = Vec::new();
+
         for action in binding.actions {
-            actions.push([
-                action.keys().next().unwrap().clone(),
-                action.values().next().unwrap().clone(),
-            ]);
+            let key = action.keys().next().unwrap().clone();
+            let value = action.values().next().unwrap().clone();
+            assert!(fixture_channel_exists(&key, fixtures), "fixture.channel pair invalid. is the fixture and channel defined in the config file?");
+            actions.push([key, value]);
         }
+
         bindings_map.insert(
             binding.identifier.clone(),
             Binding::new(&binding.identifier, actions),
         );
     }
-    bindings_map
+
+    Ok(bindings_map)
+}
+
+fn fixture_channel_exists(
+    action_fixture_dot_channnel_str: &str,
+    fixtures: &HashMap<String, Fixture>,
+) -> bool {
+    let splited_action_fixture_dot_channnel_str: Vec<&str> =
+        action_fixture_dot_channnel_str.split('.').collect();
+
+    let fixture = fixtures.get(splited_action_fixture_dot_channnel_str[0]);
+
+    if fixture.is_none() {
+        return false;
+    }
+
+    fixture
+        .unwrap()
+        .get_channel_addr(splited_action_fixture_dot_channnel_str[1])
+        .is_some()
 }

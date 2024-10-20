@@ -1,7 +1,7 @@
 use crate::schema::SchemaFixture;
 
 use super::schema::SchemaFixtureType;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Error};
 
 #[derive(Debug)]
 pub struct Fixture {
@@ -36,12 +36,15 @@ impl Fixture {
 pub fn remap_fixtures(
     fixtures: Vec<SchemaFixture>,
     fixture_types: Vec<SchemaFixtureType>,
-) -> HashMap<String, Fixture> {
+) -> Result<HashMap<String, Fixture>, Error> {
     let mut fixture_types_map: HashMap<String, SchemaFixtureType> = HashMap::new();
+
     for fixture_type in fixture_types {
         fixture_types_map.insert(fixture_type.name.clone(), fixture_type);
     }
+
     let mut fixtures_map: HashMap<String, Fixture> = HashMap::new();
+
     for fixture in fixtures {
         fixtures_map.insert(
             fixture.name.clone(),
@@ -54,5 +57,6 @@ pub fn remap_fixtures(
             ),
         );
     }
-    fixtures_map
+
+    Ok(fixtures_map)
 }

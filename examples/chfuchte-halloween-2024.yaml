@@ -1,4 +1,12 @@
 # @copyright 2024, Christian Fuchte
+config:
+    server:
+      binds: 0.0.0.0:3000
+    artnet:
+      binds: 0.0.0.0:6454
+      sends: 255.255.255.255:6454
+      universe: 0
+
 fixture_types:
     - name: PAR64
       channels:
@@ -34,3 +42,4 @@ bindings:
     - identifier: stage::dimmer::{dim_val}
       actions:
           - par64_1.Dimmer: "{dim_val}"
+          - par64_1.White: 200
