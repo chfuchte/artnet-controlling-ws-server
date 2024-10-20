@@ -1,7 +1,7 @@
+use super::parse_variable::extract_variables;
 use crate::config::{Binding, Fixture};
 use artnet::ArtNetClient;
 use logger::debug;
-use super::parse_variable::extract_variables;
 use regex::Regex;
 use std::{collections::HashMap, sync::Arc};
 
@@ -65,7 +65,10 @@ fn handle_message_with_variables(
                     let variable_value = variables
                         .get(&variable_name)
                         .expect(&format!("Variable {} not found", variable_name));
-                    acc.replace(&format!("{{{}}}", variable_name), &variable_value.to_string())
+                    acc.replace(
+                        &format!("{{{}}}", variable_name),
+                        &variable_value.to_string(),
+                    )
                 } else {
                     acc
                 }

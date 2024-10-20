@@ -1,3 +1,8 @@
+mod binding;
+mod fixture;
+mod schema;
 mod yaml;
 
-pub use yaml::{Fixture, parse_yaml_into, Binding};
+pub use binding::Binding;
+pub use fixture::Fixture;
+pub use yaml::parse_yaml_into;
