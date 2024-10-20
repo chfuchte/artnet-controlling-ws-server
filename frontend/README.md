@@ -6,7 +6,7 @@
 cd frontend
 yarn install
 yarn build
-yarn serve # automatically opens in your browser
+yarn serve
 ```
 
 ## Development
