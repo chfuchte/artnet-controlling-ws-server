@@ -38,6 +38,14 @@ You can find some configuration examples in the [examples directory](examples/).
 Configuration file schema:
 
 ```yaml
+config:
+    server:
+      binds: 0.0.0.0:3000 # where should the websocket server listen for incoming connections
+    artnet:
+      binds: 0.0.0.0:6454
+      sends: 255.255.255.255:6454 # where should the artnet data be sent to
+      broadcast: true # whether to broadcast the artnet data or not
+      universe: 0 # universe
 fixture_types:
     - name: any name you want to give to the fixture type
       channels:

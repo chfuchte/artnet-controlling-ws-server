@@ -36,7 +36,7 @@ fn main() -> Result<(), Error> {
         create_socket(
             configuration.get_artnet_bind().to_string(),
             configuration.get_artnet_send().to_string(),
-            true,
+            configuration.get_artnet_broadcast(),
         )
         .expect(&format!(
             "error binding artnet socket on {}",

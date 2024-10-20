@@ -22,6 +22,10 @@ impl Config {
     pub fn get_artnet_universe(&self) -> u16 {
         self.artnet.universe
     }
+
+    pub fn get_artnet_broadcast(&self) -> bool {
+        self.artnet.broadcast
+    }
 }
 
 pub fn map_config(config: SchemaConfig) -> Config {

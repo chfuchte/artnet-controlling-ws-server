@@ -7,6 +7,7 @@ const YAML: &str = r#"
           artnet:
             binds: 0.0.0.0:6454
             sends: 255.255.255.255:6454
+            broadcast: true
             universe: 0
         fixture_types:
         - name: FixtureType1

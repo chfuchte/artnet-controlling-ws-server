@@ -43,6 +43,7 @@ pub(crate) struct SchemaConfigArtNet {
     pub binds: String,
     pub sends: String,
     pub universe: u16,
+    pub broadcast: bool,
 }
 
 #[derive(Deserialize, Debug)]
