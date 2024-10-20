@@ -103,6 +103,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "config"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_yaml",
+]
+
+[[package]]
 name = "core-foundation-sys"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -424,10 +432,9 @@ name = "server"
 version = "0.1.0"
 dependencies = [
  "artnet",
+ "config",
  "logger",
  "regex",
- "serde",
- "serde_yaml",
  "tungstenite",
 ]
 

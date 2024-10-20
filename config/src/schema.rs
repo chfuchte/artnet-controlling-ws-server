@@ -1,19 +1,19 @@
-use std::collections::HashMap;
 use serde::Deserialize;
+use std::collections::HashMap;
 
 #[derive(Deserialize)]
-pub(super) struct YAMLChannel {
+pub(crate) struct SchemaChannel {
     pub name: String,
 }
 
 #[derive(Deserialize)]
-pub(super) struct YAMLFixtureType {
+pub(crate) struct SchemaFixtureType {
     pub name: String,
-    pub channels: Vec<YAMLChannel>,
+    pub channels: Vec<SchemaChannel>,
 }
 
 #[derive(Deserialize)]
-pub(super) struct YAMLFixture {
+pub(crate) struct SchemaFixture {
     pub name: String,
     pub start_addr: u16,
     #[serde(rename = "type")]
@@ -21,15 +21,15 @@ pub(super) struct YAMLFixture {
 }
 
 #[derive(Deserialize, Debug)]
-pub(super) struct YAMLBinding {
+pub(crate) struct SchemaBinding {
     pub identifier: String,
     /// fixture.channel -> value
     pub actions: Vec<HashMap<String, String>>,
 }
 
 #[derive(Deserialize)]
-pub(super) struct YAMLConfig {
-    pub fixture_types: Vec<YAMLFixtureType>,
-    pub fixtures: Vec<YAMLFixture>,
-    pub bindings: Vec<YAMLBinding>,
+pub(crate) struct SchemaConfig {
+    pub fixture_types: Vec<SchemaFixtureType>,
+    pub fixtures: Vec<SchemaFixture>,
+    pub bindings: Vec<SchemaBinding>,
 }

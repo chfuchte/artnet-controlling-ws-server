@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test;
+
 mod binding;
 mod fixture;
 mod schema;

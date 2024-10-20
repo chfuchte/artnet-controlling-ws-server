@@ -1,6 +1,6 @@
 use super::parse_variable::extract_variables;
-use crate::config::{Binding, Fixture};
 use artnet::ArtNetClient;
+use config::{Binding, Fixture};
 use logger::debug;
 use regex::Regex;
 use std::{collections::HashMap, sync::Arc};

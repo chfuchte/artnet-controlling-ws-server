@@ -8,7 +8,6 @@ use handlers::{handle_websocket_message, WebsocketHandlingError};
 #[cfg(test)]
 mod test;
 
-mod config;
 mod handlers;
 
 fn main() {
