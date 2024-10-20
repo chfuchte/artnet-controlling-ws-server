@@ -1,5 +1,6 @@
 use crate::config::{Binding, Fixture};
 use artnet::ArtNetClient;
+use logger::debug;
 use super::parse_variable::extract_variables;
 use regex::Regex;
 use std::{collections::HashMap, sync::Arc};
@@ -15,7 +16,7 @@ pub fn handle_websocket_message(
     fixtures: Arc<HashMap<String, Fixture>>,
     bindings: Arc<HashMap<String, Binding>>,
 ) -> Result<(), WebsocketHandlingError> {
-    let does_msg_include_variables_regex: Regex = Regex::new(r".*?{(.*?)}.*?").unwrap();
+    let does_msg_include_variables_regex: Regex = Regex::new(r".*?\{(.*?)\}.*?").unwrap();
     if does_msg_include_variables_regex.is_match(msg) {
         handle_message_with_variables(msg, client, fixtures, bindings)
     } else {
@@ -29,7 +30,7 @@ fn handle_message_with_variables(
     fixtures: Arc<HashMap<String, Fixture>>,
     bindings: Arc<HashMap<String, Binding>>,
 ) -> Result<(), WebsocketHandlingError> {
-    let replace_regex = Regex::new(r"{.*?}").unwrap();
+    let replace_regex = Regex::new(r"\{.*?\}").unwrap();
     let find_result = bindings.iter().find(|(identifier, _)| {
         // check if msg and identifier are the same if we remove the variables
         // replace with {replaced}
@@ -47,7 +48,7 @@ fn handle_message_with_variables(
         )));
     }
     let binding = binding.unwrap();
-    let variables = extract_variables(msg, binding.get_identifier());
+    let variables = extract_variables(msg, binding.get_identifier()).unwrap();
 
     binding.get_actions().iter().for_each(|action| {
         let channel_addr = get_channel_addr(&action[0], fixtures.clone());
@@ -71,6 +72,7 @@ fn handle_message_with_variables(
             })
             .parse()
             .unwrap();
+        debug(&format!("Setting channel {} to {}", channel_addr, value));
         client.set_single(channel_addr, value);
     });
 
@@ -94,6 +96,7 @@ fn handle_message_without_variables(
     binding.unwrap().get_actions().iter().for_each(|action| {
         let channel_addr = get_channel_addr(&action[0], fixtures.clone());
         let value: u8 = action[1].parse().unwrap();
+        debug(&format!("Setting channel {} to {}", channel_addr, value));
         client.set_single(channel_addr, value);
     });
 

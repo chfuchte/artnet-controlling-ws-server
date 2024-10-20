@@ -21,7 +21,7 @@ fixture_types:
 
 fixtures:
     - name: par64_1
-      start_addr: 150
+      start_addr: 1
       type: PAR64
 
 bindings:

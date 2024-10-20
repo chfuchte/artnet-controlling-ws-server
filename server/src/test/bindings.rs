@@ -7,7 +7,7 @@ fn test_extract_variable() {
     let result = extract_variables(msg, identifier);
     let mut expected = std::collections::HashMap::new();
     expected.insert("variable".to_string(), 255);
-    assert_eq!(result, expected); 
+    assert_eq!(result.unwrap(), expected); 
 }
 
 #[test]
@@ -18,5 +18,5 @@ fn test_extract_variable_multiple() {
     let mut expected = std::collections::HashMap::new();
     expected.insert("variable".to_string(), 255);
     expected.insert("variable2".to_string(), 42);
-    assert_eq!(result, expected);
+    assert_eq!(result.unwrap(), expected);
 }
