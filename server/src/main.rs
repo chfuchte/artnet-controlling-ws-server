@@ -57,13 +57,12 @@ fn main() -> Result<(), Error> {
         configuration.get_artnet_universe(),
     ));
 
-    if configuration.get_send_every_ms().is_some() {
+    let commit_regulary_ms = configuration.get_send_every_ms().unwrap_or(50);
+
+    if commit_regulary_ms > 0 {
         let artnet_client_artnet_client_commit_regulary_clone = Arc::clone(&artnet_client);
-        let configuration_commit_regulary_clone = Arc::clone(&configuration);
         thread::spawn(move || loop {
-            thread::sleep(std::time::Duration::from_millis(
-                configuration_commit_regulary_clone.get_send_every_ms().unwrap(),
-            ));
+            thread::sleep(std::time::Duration::from_millis(commit_regulary_ms));
             artnet_client_artnet_client_commit_regulary_clone
                 .commit()
                 .expect("failed to commit artnet data");
@@ -160,7 +159,7 @@ fn read_parse_config_file(
 ) -> (
     Arc<HashMap<String, Fixture>>,
     Arc<HashMap<String, Binding>>,
-    Arc<Config>,
+    Config,
 ) {
     let config_file_content_str = read_to_string(&config_file_path);
     if config_file_content_str.is_err() {
@@ -184,5 +183,5 @@ fn read_parse_config_file(
 
     let fixtures = Arc::new(fixtures);
     let bindings = Arc::new(bindings);
-    (fixtures, bindings, Arc::new(config))
+    (fixtures, bindings, config)
 }
