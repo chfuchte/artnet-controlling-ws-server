@@ -1,8 +1,5 @@
-use crate::{schema::SchemaBinding, Fixture};
-use std::{
-    collections::HashMap,
-    fmt::{Debug, Error},
-};
+use crate::{schema::SchemaBinding, ConfigParseError, Fixture};
+use std::{collections::HashMap, fmt::Debug};
 
 #[derive(Debug)]
 pub struct Binding {
@@ -30,7 +27,7 @@ impl Binding {
 pub fn remap_bindings(
     bindings: Vec<SchemaBinding>,
     fixtures: &HashMap<String, Fixture>,
-) -> Result<HashMap<String, Binding>, Error> {
+) -> Result<HashMap<String, Binding>, ConfigParseError> {
     let mut bindings_map: HashMap<String, Binding> = HashMap::new();
 
     for binding in bindings {
@@ -39,7 +36,12 @@ pub fn remap_bindings(
         for action in binding.actions {
             let key = action.keys().next().unwrap().clone();
             let value = action.values().next().unwrap().clone();
-            assert!(fixture_channel_exists(&key, fixtures), "fixture.channel pair invalid. is the fixture and channel defined in the config file?");
+
+            let pair_exists = fixture_channel_exists(&key, fixtures);
+            if !pair_exists {
+                return Err(ConfigParseError::BindingFixtureChannelDoesNotExist(key));
+            }
+
             actions.push([key, value]);
         }
 

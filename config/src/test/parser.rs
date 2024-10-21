@@ -1,4 +1,4 @@
-use crate::parse_yaml_into;
+use crate::yaml::parse_yaml_into;
 
 const YAML: &str = r#"
         config:
