@@ -1,4 +1,4 @@
-use crate::parse_yaml_into;
+use crate::yaml::parse_yaml_into;
 
 const YAML: &str = r#"
         config:
@@ -10,7 +10,6 @@ const YAML: &str = r#"
             sends: 255.255.255.255:6454
             broadcast: true
             universe: 0
-            send_every_ms: 100
         fixture_types:
         - name: FixtureType1
           channels:
@@ -97,7 +96,6 @@ fn test_parse_config() {
     assert_eq!(config.get_artnet_send(), "255.255.255.255:6454");
     assert_eq!(config.get_artnet_universe(), 0);
     assert_eq!(config.get_allow_direct_fixture_control(), true);
-    assert_eq!(config.get_send_every_ms(), Some(100));
 }
 
 #[test]
@@ -107,5 +105,4 @@ fn test_parse_config_only_necessary() {
 
     let (_, _, config) = result.unwrap();
     assert_eq!(config.get_allow_direct_fixture_control(), false);
-    assert_eq!(config.get_send_every_ms(), None);
 }

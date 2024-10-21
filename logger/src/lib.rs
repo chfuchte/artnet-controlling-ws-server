@@ -1,7 +1,8 @@
 use colored::Colorize;
 use chrono::Local;
 
-enum LogLevel {
+#[derive(Debug)]
+pub enum LogLevel {
     Log,
     Debug,
     Info,
@@ -21,7 +22,8 @@ impl ToString for LogLevel {
     }
 }
 
-fn build_log_str(level: LogLevel, message: &str) -> String {
+// Make the function public so macros can access it when the library is used
+pub fn build_log_str(level: LogLevel, message: &str) -> String {
     let now = Local::now();
     let log_level = level.to_string();
     let log_level_styled = match level {
@@ -40,22 +42,38 @@ fn build_log_str(level: LogLevel, message: &str) -> String {
     )
 }
 
-pub fn log(message: &str) {
-    println!("{}", build_log_str(LogLevel::Log, message))
+// Macro definitions with public visibility for use outside the library
+#[macro_export]
+macro_rules! log {
+    ($($arg:tt)*) => {
+        println!("{}", $crate::build_log_str($crate::LogLevel::Log, &format!($($arg)*)));
+    };
 }
 
-pub fn debug(message: &str) {
-    println!("{}", build_log_str(LogLevel::Debug, message))
+#[macro_export]
+macro_rules! debug {
+    ($($arg:tt)*) => {
+        println!("{}", $crate::build_log_str($crate::LogLevel::Debug, &format!($($arg)*)));
+    };
 }
 
-pub fn info(message: &str) {
-    println!("{}", build_log_str(LogLevel::Info, message))
+#[macro_export]
+macro_rules! info {
+    ($($arg:tt)*) => {
+        println!("{}", $crate::build_log_str($crate::LogLevel::Info, &format!($($arg)*)));
+    };
 }
 
-pub fn warning(message: &str) {
-    println!("{}", build_log_str(LogLevel::Warning, message))
+#[macro_export]
+macro_rules! warning {
+    ($($arg:tt)*) => {
+        println!("{}", $crate::build_log_str($crate::LogLevel::Warning, &format!($($arg)*)));
+    };
 }
 
-pub fn error(message: &str) {
-    println!("{}", build_log_str(LogLevel::Error, message))
+#[macro_export]
+macro_rules! error {
+    ($($arg:tt)*) => {
+        println!("{}", $crate::build_log_str($crate::LogLevel::Error, &format!($($arg)*)));
+    };
 }

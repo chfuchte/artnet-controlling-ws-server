@@ -1,4 +1,6 @@
-use super::parse_variable::extract_variables;
+use super::{
+    utils::get_channel_addr, with_dfc::handle_message_with_direct_fixture_contol, with_vars::handle_message_with_variables
+};
 use artnet::ArtNetClient;
 use config::{Binding, Fixture};
 use logger::log;
@@ -40,88 +42,6 @@ pub fn handle_websocket_message(
     }
 }
 
-fn handle_message_with_direct_fixture_contol(
-    msg: &str,
-    client: Arc<ArtNetClient>,
-    fixtures: Arc<HashMap<String, Fixture>>,
-) -> Result<(), WebsocketHandlingError> {
-    // msg format needs to be "{fixture}.{channel}={value}"
-    let re =
-        Regex::new(r"^(?P<fixture>[^\.]+)\.(?P<channel>[^\.]+)=(?P<value>[0-9]+)$").unwrap();
-    let cap = re.captures(msg).ok_or_else(|| {
-        WebsocketHandlingError::UnknownMessage(format!("No binding found for message: {}", msg))
-    })?;
-    let fixture_name = cap.name("fixture").unwrap().as_str();
-    let channel_name = cap.name("channel").unwrap().as_str();
-    let value: u8 = cap.name("value").unwrap().as_str().parse().map_err(|_| {
-        WebsocketHandlingError::ParseError(format!(
-            "Failed to parse value into u8: {}",
-            cap.name("value").unwrap().as_str()
-        ))
-    })?;
-    let addr = get_channel_addr(&format!("{}.{}", fixture_name, channel_name), fixtures);
-    if addr.is_err() {
-        return Err(WebsocketHandlingError::ChannelNotFound(
-            channel_name.to_string(),
-        ));
-    }
-    let addr = addr.unwrap();
-    log(&format!("Setting channel {} to {}", addr, value));
-    client.set_single(addr, value);
-    // we don't need to commit the changes to the artnet nodes as this happens every n milliseconds
-    Ok(())
-}
-
-fn handle_message_with_variables(
-    msg: &str,
-    client: Arc<ArtNetClient>,
-    fixtures: Arc<HashMap<String, Fixture>>,
-    bindings: Arc<HashMap<String, Binding>>,
-) -> Result<(), WebsocketHandlingError> {
-    let replace_regex = Regex::new(r"\{.*?\}").unwrap();
-
-    // find the binding that matches the message
-    let binding = bindings
-        .iter()
-        .find(|(identifier, _)| {
-            let replaced_identifier = replace_regex.replace_all(identifier, "{replaced}");
-            let replaced_msg = replace_regex.replace_all(msg, "{replaced}");
-            replaced_identifier == replaced_msg
-        })
-        .map(|(_, binding)| binding);
-
-    let binding = binding.ok_or_else(|| {
-        WebsocketHandlingError::UnknownMessage(format!("No binding found for message: {}", msg))
-    })?;
-
-    // extract variables from the message
-    let variables = extract_variables(msg, binding.get_identifier()).map_err(|e| {
-        WebsocketHandlingError::ParseError(format!(
-            "Failed to extract variables from message: {}",
-            e
-        ))
-    })?;
-
-    // replace variables and set the channels to the values
-    for action in binding.get_actions() {
-        let channel_addr = get_channel_addr(&action[0], fixtures.clone())?;
-
-        let value_str = substitute_variables(&action[1], &variables)?;
-        let value: u8 = value_str.parse().map_err(|_| {
-            WebsocketHandlingError::ParseError(format!(
-                "Failed to parse value into u8: {}",
-                value_str
-            ))
-        })?;
-
-        log(&format!("Setting channel {} to {}", channel_addr, value));
-        client.set_single(channel_addr, value);
-    }
-
-    // commit the changes to the artnet nodes via the client
-    client.commit().map_err(WebsocketHandlingError::IoError)
-}
-
 fn handle_message_without_variables(
     msg: &str,
     client: Arc<ArtNetClient>,
@@ -143,53 +63,10 @@ fn handle_message_without_variables(
             ))
         })?;
 
-        log(&format!("Setting channel {} to {}", channel_addr, value));
+        log!("Setting channel {} to {}", channel_addr, value);
         client.set_single(channel_addr, value);
     }
 
     // commit the changes to the artnet nodes via the client
     client.commit().map_err(WebsocketHandlingError::IoError)
-}
-
-fn get_channel_addr(
-    action_fixture_dot_channel_str: &str,
-    fixtures: Arc<HashMap<String, Fixture>>,
-) -> Result<u16, WebsocketHandlingError> {
-    let split: Vec<&str> = action_fixture_dot_channel_str.split('.').collect();
-    if split.len() != 2 {
-        return Err(WebsocketHandlingError::InvalidActionFormat(
-            action_fixture_dot_channel_str.to_string(),
-        ));
-    }
-
-    let fixture_name = split[0];
-    let channel_name = split[1];
-
-    let fixture = fixtures
-        .get(fixture_name)
-        .ok_or_else(|| WebsocketHandlingError::FixtureNotFound(fixture_name.to_string()))?;
-
-    let channel_addr = fixture
-        .get_channel_addr(channel_name)
-        .ok_or_else(|| WebsocketHandlingError::ChannelNotFound(channel_name.to_string()))?;
-
-    Ok(*channel_addr)
-}
-
-fn substitute_variables(
-    value: &str,
-    variables: &HashMap<String, u8>,
-) -> Result<String, WebsocketHandlingError> {
-    let mut result = value.to_string();
-
-    let variable_regex = Regex::new(r"\{(.*?)\}").unwrap();
-    for caps in variable_regex.captures_iter(value) {
-        let var_name = &caps[1];
-        let var_value = variables
-            .get(var_name)
-            .ok_or_else(|| WebsocketHandlingError::VariableNotFound(var_name.to_string()))?;
-        result = result.replace(&format!("{{{}}}", var_name), var_value.to_string().as_str());
-    }
-
-    Ok(result)
 }
