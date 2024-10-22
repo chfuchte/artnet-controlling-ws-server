@@ -5,7 +5,7 @@ use std::net::UdpSocket;
 /// # Example
 /// ```rust
 /// use artnet::create_socket;
-/// 
+///
 /// let send_artnet = create_socket("0.0.0.0:6454".to_string(), "255.255.255.255:6454".to_string(), true).unwrap();
 /// send_artnet(&0, &[255; 512], None).unwrap(); // send to the default address
 /// send_artnet(&0, &[255; 512], Some("127.0.0.1:6454")).unwrap(); // send to a specific address

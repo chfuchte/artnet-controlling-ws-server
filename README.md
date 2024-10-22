@@ -1,18 +1,28 @@
-# Websocket-based ArtNet Controller
+# Extentible Art-Net controlling WebSocket Server
 
-A websocket-based, file-configured lighting (Art-Net) controller, written in Rust.
+A configuration file-based WebSocket server providing lighting control via the Art-Net protocol, allowing you to build your preferred frontend without caring about the backend.
 
 ## Table of Contents
 
+-   [Features](#features)
 -   [Installation](#installation)
     -   [Prebuilt Binary (Github Release)](#prebuilt-binary-github-release)
     -   [Building from Source](#building-from-source)
--   [Configuration](#configuration)
-    -   [Server Configuration](#server-configuration)
-    -   [ArtNet Configuration](#artnet-configuration)
-    -   [Binding with Variables](#binding-with-variables)
--   [Frontend](#frontend)
+-   [Usage](#usage)
+    -   [Configuration File Schema](#configuration-file-schema)
+    -   [Send Data regularly](#send-data-regularly)
+    -   [Direct Fixture Control](#direct-fixture-control)
+    -   [Bindings](#bindings)
+    -   [Bindings with Variables](#bindings-with-variables)
+-   [Development](#development)
 -   [License](#license)
+
+## Features
+
+**WebSockets**: Control up to 512 channels via a single WebSocket connection.
+**Configurable**: Everything is configured in a YAML configuration file to make it easy to set up.
+**Direct fixture control**: Allows direct control of fixture channels without requiring predefined bindings.
+**Variable support in bindings**: Use variables to make them more flexible.
 
 ## Installation
 
@@ -39,96 +49,139 @@ cargo build --release
 ./target/release/server config.yaml
 ```
 
-## Configuration
+## Usage
 
-The configuration file needs to be in the YAML format and needs to be passed as an argument to the server binary.
-You can find some configuration examples in the [examples directory](examples/).
-Configuration file schema:
+Everything is configured in a single configuration file. The configuration file needs to be in the YAML format and needs to be passed as an argument to the server binary. It will be parsed and loaded at server startup.
+
+```bash
+./server /path/to/config.yaml
+```
+
+### Configuration File Schema
 
 ```yaml
 config:
     server:
-        binds: 0.0.0.0:3000
-        allow_direct_fixture_control: true # (optional)
+        binds: # string (required)
+        allow_direct_fixture_control: # boolean (optional) (default: false)
     artnet:
-        binds: 0.0.0.0:6454
-        sends: 255.255.255.255:6454
-        broadcast: true
-        universe: 0
-        send_every_ms: 50 # (optional) (default: 50)
+        binds: # string (required)
+        sends: # string (required)
+        broadcast: # boolean (required)
+        universe: # integer (required) (1-32768)
+        send_every_ms: # integer (optional) (default: 50)
 fixture_types:
-    - name: any name you want to give to the fixture type
+    - name: # string (required)
       channels:
-          - name: list of channels for the fixture type (ordered by dmx channel address)
+          - name: # string (required)
+    # as many fixture types as you want
 fixtures:
-    - name: any name you want to give to the fixture
-      type: name of the fixture type (needs to be present in fixture_types)
-      start_addr: start address of the fixture in the universe (1-256)
+    - name: # string (required)
+      type: # string (required) (name of the fixture type)
+      start_addr: # integer (required) (1-256)
+    # as many fixtures as you want
 bindings:
-    - identifier: any unique identifier
+    - identifier: # string (required)
       actions:
-          - fixture.channel: value between 0 and 255 (channel is the channel name of the fixture type)
-    - identifier: something{variable} # see below
-      actions:
-          - fixture.channel: "{variable}" # see below
+          - fixture.channel: # integer (required) (0-255)
+    # as many bindings as you want
 ```
 
-### Server Configuration
+| Key                                          | Type    | Required | Default | Description                                                      |
+| -------------------------------------------- | ------- | -------- | ------- | ---------------------------------------------------------------- |
+| `config.server.binds`                        | string  | yes      | -       | The TCP server binds to the given value. f.e. `0.0.0.0:3000`.    |
+| `config.server.allow_direct_fixture_control` | boolean | no       | false   | [Direct Fixture Control](#direct-fixture-control)                |
+| `config.artnet.binds`                        | string  | yes      | -       | The ArtNet client binds to the given value. f.e. `0.0.0.0:6454`. |
+| `config.artnet.sends`                        | string  | yes      | -       | address to send Art-Net packages to f.e. `0.0.0.0:6454`          |
+| `config.artnet.broadcast`                    | boolean | yes      | -       | wheather to broadcast the Art-Net packages or not                |
+| `config.artnet.universe`                     | integer | yes      | -       | the universe configured in the Art-Net node                      |
+| `config.artnet.send_every_ms`                | integer | no       | 50      | [Send Data regularly](#send-data-regularly)                      |
 
-#### `config.server.binds`
+### Send Data regularly
 
-The ArtNet client binds to the given value. f.e. `0.0.0.0:3000`.
+The server sends the Art-Net packages every n milliseconds, regardless of the changes. This can be useful keep the chances of package loss low.
+The default is every 50 milliseconds and can be changed at `config.artnet.send_every_ms`. You can disable this feature by setting the value to `0`.
 
-#### `config.server.allow_direct_fixture_control`
+> [!IMPORTANT]
+> If you want to use [direct_fixture_control](#direct-fixture-control) you are not able to disable this feature as direct fixture control does not send every single channel change directly (other as bindings do).
 
-(Optional, default: false). If set to true, the server allows manipulating fixture channels without a binding. The server interprets any incoming message in the format `<fixture_name>.<channel>=<value>` as a direct fixture control message and applies it. The value must be an integer between 0 and 255.
+### Direct Fixture Control
 
-It is not recommended to use this feature in a production environment or to use binding identifiers in a similar format to the direct fixture control messages. The following regex should not match any binding identifier: `^[^\.]+\.[^\.]+=[0-9]+$.`
+Needs to be specified in the configuration file as `config.server.allow_direct_fixture_control` (optional, default: false).
+If set to true, the server allows manipulating fixture channels without a binding. The server interprets any incoming message in the format `<fixture_name>.<channel>=<value>` as a direct fixture control message and applies it. The value must be an integer between 0 and 255.
 
-### ArtNet Configuration
+> [!IMPORTANT]
+> It is not possiple to use binding identifiers in a similar format to the direct fixture control messages even if it is turned off.
+> The following regex should not match any binding identifier: `^[^\.]+\.[^\.]+=[0-9]+$.`
 
-#### `config.artnet.binds`
+### Bindings
 
-The ArtNet client binds to the given value. f.e. `0.0.0.0:6454`.
+Bindings are used to map incoming websocket messages to fixture channels. The bindings need to be specified in the configuration file as a list of bindings. Each binding has a unique identifier and a list of actions. The actions are executed in order when the binding is triggered.
+The format of the action is `<fixture_name>.<channel>: <value>`. The value must be an integer between 0 and 255. The server will set the fixture channel to the given value.
 
-#### `config.artnet.sends`
+### Bindings with Variables
 
-The server sends Art-Net messages to the given address and port. f.e. `127.0.0.1:6454` (localhost).
+If you want to don't rely on hardcoded values, you can use variables in your bindings. The variables need to be enclosed in curly braces `{}` in the `identifier` and the `message`. The variables need to be present in the incoming websocket message. The server will replace the variables with the values from the incoming message.
+The variable values of an incomming message need to be positive integers between 0 and 255.
 
-#### `config.artnet.broadcast`
-
-If set to `true`, the server broadcasts the Art-Net messages to the network.
-
-#### `config.artnet.universe`
-
-The universe configured in the Art-Net node (which the node is listening to).
-
-#### `config.artnet.send_every_ms`
-
-Optional (default: 50). The server sends Art-Net messages every given milliseconds, regardless of the changes in the fixture channels.
-This is necessary as [direct_fixture_control](#configserverallow_direct_fixture_control) is not sending the changes directly. If you don't use the direct fixture control feature, you may disable this feature by setting the value to `0`.
-
-### Binding with Variables
-
-You can use variables in the binding actions. The variables need to be enclosed in curly braces `{}`. The variables need to be present in the incoming websocket message. The server will replace the variables with the values from the incoming message.
-The variables need to be positive integers between 0 and 255. This way you can set the fixture channels value dynamically from your frontend.
-
-For example, you can use the following binding:
+The following binding would set the `fixture.channel` to `200` if the incoming message is `hello{200}`. This would have the same effect as setting `fixture.channel` to `200` by hand in the configuration file.
 
 ```yaml
 bindings:
-    - identifier: something{variable}
+    - identifier: hello{variable}
       actions:
           - fixture.channel: "{variable}"
 ```
 
-The server will replace the `{variable}` with the value from the incoming message.
-The message `something{200}` will set `fixture.channel` to `200`. (which would be the same as setting `fixture.channel` to `200` as the binding directly).
+You may also use multiple variables in a single binding. The following binding would set the `fixture.channel` to `200` and the `fixture2.channel` to `100` if the incoming message is `hello{200}world{100}`.
 
-## Frontend
+```yaml
+bindings:
+    - identifier: hello{variable1}world{variable2}
+      actions:
+          - fixture.channel: "{variable1}"
+          - fixture2.channel: "{variable2}"
+```
 
-The [frontend](frontend/) is not hosted by the server as you may replace it with your own implementation.
-The frontend is just a simple vite-based application compiling to a simple HTML file with some assets which you can open in your web browser or host it on your own.
+> [!NOTE]
+> Every variable needs to be unique in a single binding although it may be used multiple times in the list of actions.
+
+## Development
+
+### Prerequisites
+
+-   [Git](https://git-scm.com/)
+-   [Rust Programming Language](https://www.rust-lang.org/tools/install)
+
+### Project Structure
+
+The project is split into multiple crates:
+
+-   `artnet`: library providing the Art-Net client
+-   `config`: library providing the configuration parsing
+-   `logger`: library providing a simple colored console logger
+-   `server`: the main binary running the server and handling the websocket connections
+
+### Running the Server
+
+You may want to use the [`config.yaml`](examples/dev/config.yaml) configuration file for testing and playing around on your local machine.
+The `config.yaml` should have all configurations possible set and at least one example per feature.
+
+```bash
+cargo debug
+# or
+cargo run -- examples/dev/config.yaml`
+```
+
+In case you need a debug client, you can use the [`client.html`](examples/dev/client.html) which sets up a websocket connection to `ws://localhost:3000`.
+
+### Testing
+
+Each crate has its own unit tests. You can run the tests with the following command either in the root directory or in the specific crate directory:
+
+```bash
+cargo test
+```
 
 ## License
 

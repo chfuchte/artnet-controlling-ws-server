@@ -1,4 +1,4 @@
-# @copyright 2024, Christian Fuchte
+# configuration file for local testing and development
 config:
     server:
       binds: 0.0.0.0:3000
@@ -35,13 +35,19 @@ fixtures:
       type: PAR64
 
 bindings:
-    - identifier: stage::color::white
+    - identifier: color::white
       actions:
           - par64_1.White: 255
           - par64_1.Red: 0
           - par64_1.Green: 0
           - par64_1.Blue: 0
-    - identifier: stage::dimmer::{dim_val}
+
+    - identifier: color::{red}{green}{blue}
+      actions:
+          - par64_1.Red: "{red}"
+          - par64_1.Green: "{green}"
+          - par64_1.Blue: "{blue}"
+    - identifier: dimmer::{dim_val}
       actions:
           - par64_1.Dimmer: "{dim_val}"
-          - par64_1.White: 200
+          - par64_1.White: 255

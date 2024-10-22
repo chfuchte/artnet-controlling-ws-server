@@ -1,10 +1,11 @@
-use logger::{debug, error, info, warning};
-
-use artnet::{create_socket, ArtNetClient};
+use artnet::ArtNetClient;
 use config::{yaml::parse_yaml_into, Binding, Config, Fixture};
+use core::panic;
 use handlers::{handle_websocket_message, WebsocketHandlingError};
+use logger::{debug, error, info, warning};
 use std::{
     collections::HashMap, fmt::Error, fs::read_to_string, net::TcpListener, sync::Arc, thread,
+    time::Duration,
 };
 use tungstenite::accept;
 
@@ -14,59 +15,56 @@ mod test;
 mod handlers;
 
 fn main() -> Result<(), Error> {
-    let config_file_path = std::env::args().nth(1);
-    if config_file_path.is_none() {
-        error!("please provide a config file path as the first argument");
-        panic!("no config file path provided");
-    }
-    let config_file_path = config_file_path.unwrap();
-    if config_file_path.ends_with(".yaml") || config_file_path.ends_with(".yml") {
-        debug!("config file path: {}", config_file_path);
-    } else {
-        error!("config file must be a yaml file");
-        panic!("config file must be a yaml file");
-    }
+    let (fixtures, bindings, config) = read_parse_config_file();
 
-    let (fixtures, bindings, configuration) = read_parse_config_file(&config_file_path);
-
-    if configuration.get_allow_direct_fixture_control() {
-        info!("allowing direct fixture control");
+    {
+        let dfc_allowed = config.get_allow_direct_fixture_control();
+        let commit_every_ms = config.get_send_every_ms().unwrap_or(50);
+        if dfc_allowed && commit_every_ms == 0 {
+            panic!("direct fixture control is enabled but commit_every_ms is set to 0");
+        }
+        if dfc_allowed {
+            debug!(
+                "direct fixture control is enabled with regular commit every {}ms",
+                commit_every_ms
+            );
+        }
     }
 
-    let tcp_server = TcpListener::bind(configuration.get_server_bind()).expect(&format!(
-        "failed to bind to {}",
-        configuration.get_server_bind()
-    ));
-    info!("server started: ws://{}", configuration.get_server_bind());
+    let tcp_server_bind = config.get_server_bind();
+    let tcp_server = TcpListener::bind(tcp_server_bind)
+        .expect(&format!("failed to bind to {}", tcp_server_bind));
+    info!("server started: ws://{}", tcp_server_bind);
 
     let send_via_artnet_udp_socket = Arc::new(
-        create_socket(
-            configuration.get_artnet_bind().to_string(),
-            configuration.get_artnet_send().to_string(),
-            configuration.get_artnet_broadcast(),
+        artnet::create_socket(
+            config.get_artnet_bind().to_string(),
+            config.get_artnet_send().to_string(),
+            config.get_artnet_broadcast(),
         )
         .expect(&format!(
             "error binding artnet socket on {}",
-            configuration.get_artnet_bind()
+            config.get_artnet_bind()
         )),
     );
     let artnet_client = Arc::new(ArtNetClient::new(
         send_via_artnet_udp_socket,
-        configuration.get_artnet_universe(),
+        config.get_artnet_universe(),
     ));
 
-    if configuration.get_send_every_ms().is_some() {
+    if config.get_send_every_ms().is_some() {
         let artnet_client_artnet_client_commit_regulary_clone = Arc::clone(&artnet_client);
-        let configuration_commit_regulary_clone = Arc::clone(&configuration);
+        let configuration_commit_regulary_clone = Arc::clone(&config);
         thread::spawn(move || loop {
-            thread::sleep(std::time::Duration::from_millis(
+            thread::sleep(Duration::from_millis(
                 configuration_commit_regulary_clone
                     .get_send_every_ms()
                     .unwrap(),
             ));
-            artnet_client_artnet_client_commit_regulary_clone
-                .commit()
-                .expect("failed to commit artnet data");
+            let commit_result = artnet_client_artnet_client_commit_regulary_clone.commit();
+            if let Err(err) = commit_result {
+                error!("error sending artnet package: {:?}", err);
+            }
         });
     }
 
@@ -74,20 +72,49 @@ fn main() -> Result<(), Error> {
         let artnet_client_current_thread_clone = Arc::clone(&artnet_client);
         let fixtures_current_thread_clone = Arc::clone(&fixtures);
         let bindings_current_thread_clone = Arc::clone(&bindings);
-        let allow_direct_fixture_control =
-            Arc::new(configuration.get_allow_direct_fixture_control());
+        let allow_direct_fixture_control = Arc::new(config.get_allow_direct_fixture_control());
 
         thread::spawn(move || {
-            let mut websocket = accept(tcp_stream.unwrap()).unwrap();
+            let tcp_stream = match tcp_stream {
+                Ok(stream) => stream,
+                Err(err) => {
+                    error!("failed to accept incoming TCP stream: {:?}", err);
+                    return;
+                }
+            };
+            let mut websocket = match accept(tcp_stream) {
+                Ok(ws) => ws,
+                Err(err) => {
+                    error!("failed to accept WebSocket connection: {:?}", err);
+                    return;
+                }
+            };
 
             loop {
-                let msg = websocket.read().expect("failed to read socket message");
-                if msg.is_empty() || msg.is_close() || msg.is_ping() || msg.is_pong() {
+                let msg = match websocket.read() {
+                    Ok(msg) => msg,
+                    Err(err) => {
+                        error!("failed to read from WebSocket: {:?}", err);
+                        break; // Break the loop if there's an error reading from the socket
+                    }
+                };
+                if msg.is_close() {
+                    info!("WebSocket connection closed by client.");
+                    break;
+                }
+                if msg.is_empty() || msg.is_ping() || msg.is_pong() {
                     continue;
                 }
-                let ws_msg_str = msg.to_text().expect("failed to convert message to string");
 
-                debug!("msg over websocket: {}", ws_msg_str);
+                let ws_msg_str = match msg.to_text() {
+                    Ok(text) => text,
+                    Err(err) => {
+                        error!("failed to convert WebSocket message to text: {:?}", err);
+                        break; // Exit loop on message parsing error
+                    }
+                };
+
+                debug!("recieved message over websocket: {}", ws_msg_str);
 
                 let handling_result = handle_websocket_message(
                     ws_msg_str,
@@ -104,46 +131,59 @@ fn main() -> Result<(), Error> {
                             .expect("failed to send a response to the client");
                     }
                     Err(err) => match err {
-                        WebsocketHandlingError::IoError(err) => {
-                            warning!("IO error: {}", err);
+                        WebsocketHandlingError::ChannelNotFound(fixture_name, channel_name) => {
+                            warning!(
+                                "channel {} could not be found on fixture {}. check your config.",
+                                channel_name,
+                                fixture_name
+                            );
                             websocket
-                                .send(err.to_string().into())
+                                .send(
+                                    format!(
+                                        "channel {} could not be found on fixture {}",
+                                        channel_name, fixture_name
+                                    )
+                                    .into(),
+                                )
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::UnknownMessage(err_str) => {
-                            warning!("{}", &err_str);
+                        WebsocketHandlingError::FixtureNotFound(fixture_name) => {
+                            warning!(
+                                "fixture {} does not exist. check your config.",
+                                fixture_name
+                            );
                             websocket
-                                .send(err_str.into())
+                                .send(format!("fixture {} does not exist", fixture_name).into())
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::ParseError(err_str) => {
-                            warning!("{}", &err_str);
+                        WebsocketHandlingError::DfcDisabledButMsgIsInDfcFormat => {
+                            warning!("dfc is disabled but message is in dfc format");
                             websocket
-                                .send(err_str.into())
+                                .send("dfc is disabled but message is in dfc format".into())
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::ChannelNotFound(err_str) => {
-                            warning!("{}", &err_str);
+                        WebsocketHandlingError::IoError(io_err) => {
+                            error!("error sending artnet package: {:?}", io_err);
                             websocket
-                                .send(err_str.into())
+                                .send("error sending artnet package".into())
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::FixtureNotFound(err_str) => {
-                            warning!("{}", &err_str);
+                        WebsocketHandlingError::UnknownMessage(msg) => {
+                            warning!("unknown message: {}", msg);
                             websocket
-                                .send(err_str.into())
+                                .send("unknown message".into())
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::InvalidActionFormat(err_str) => {
-                            warning!("{}", &err_str);
+                        WebsocketHandlingError::ExtractVariableError(val) => {
+                            warning!("variable not found for: {}", val);
                             websocket
-                                .send(err_str.into())
+                                .send("variable not found".into())
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::VariableNotFound(err_str) => {
-                            warning!("{}", &err_str);
+                        WebsocketHandlingError::ParseVariableToNumError(parse_err) => {
+                            warning!("failed to parse variable to number (u8): {:?}", parse_err);
                             websocket
-                                .send(err_str.into())
+                                .send("failed to parse variable to number.".into())
                                 .expect("failed to send a response to the client");
                         }
                     },
@@ -155,34 +195,32 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn read_parse_config_file(
-    config_file_path: &str,
-) -> (
+fn read_parse_config_file() -> (
     Arc<HashMap<String, Fixture>>,
     Arc<HashMap<String, Binding>>,
     Arc<Config>,
 ) {
-    let config_file_content_str = read_to_string(&config_file_path);
-    if config_file_content_str.is_err() {
-        error!(
-            "failed to read config file: {}",
-            config_file_content_str.err().unwrap()
-        );
-        panic!("failed to read config file");
+    let config_file_path = std::env::args()
+        .nth(1)
+        .expect("please provide a config file path as the first argument");
+    if config_file_path.ends_with(".yaml") || config_file_path.ends_with(".yml") {
+        debug!("using configuration: {}", config_file_path);
+    } else {
+        panic!("file format not supported. Use .yaml or .yml");
     }
-    let config_file_content_str = config_file_content_str.unwrap();
+
+    let config_file_content_str = read_to_string(&config_file_path)
+        .expect("failed to read configuration file. Does file exist?");
+
     let (fixtures, bindings, config) = match parse_yaml_into(&config_file_content_str) {
-        Ok(result) => {
-            debug!("successfully parsed config file");
-            result
-        }
+        Ok(result) => result,
         Err(err) => {
-            error!("failed to parse config file: {}", err.to_string());
-            panic!("failed to parse config file");
+            panic!("failed to parse configuration file: {:?}", err);
         }
     };
 
     let fixtures = Arc::new(fixtures);
     let bindings = Arc::new(bindings);
-    (fixtures, bindings, Arc::new(config))
+    let config = Arc::new(config);
+    (fixtures, bindings, config)
 }

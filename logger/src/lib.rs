@@ -1,5 +1,5 @@
-use colored::Colorize;
 use chrono::Local;
+use colored::Colorize;
 
 #[derive(Debug)]
 pub enum LogLevel {

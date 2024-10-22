@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod test;
 
+mod client;
 mod package;
 mod socket;
-mod client;
 
-pub use socket::create_socket;
 pub use client::ArtNetClient;
+pub use socket::create_socket;

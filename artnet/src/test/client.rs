@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use crate::ArtNetClient;
+use std::sync::Arc;
 
 fn get_test_client() -> ArtNetClient {
     ArtNetClient::new(Arc::new(|_, _, _| Ok(())), 0)

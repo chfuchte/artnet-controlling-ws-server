@@ -19,6 +19,7 @@ impl Binding {
         &self.identifier
     }
 
+    /// [key, value]
     pub fn get_actions(&self) -> &Vec<[String; 2]> {
         &self.actions
     }

@@ -1,0 +1,8 @@
+[alias]
+debug = "run -- examples/dev/config.yaml"
+
+[cargo-new]
+vcs = "none"
+
+[term]
+color = 'always'

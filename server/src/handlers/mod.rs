@@ -1,8 +1,9 @@
 pub(crate) mod errors;
+mod handle_default;
+mod handle_dfc;
+mod handle_vars;
 mod handler;
-pub(crate) mod parse_variable;
-mod utils;
-mod with_dfc;
-mod with_vars;
+pub(crate) mod utils;
 
-pub use handler::{handle_websocket_message, WebsocketHandlingError};
+pub use errors::WebsocketHandlingError;
+pub use handler::handle_websocket_message;
