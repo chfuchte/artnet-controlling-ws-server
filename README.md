@@ -19,10 +19,10 @@ A configuration file-based WebSocket server providing lighting control via the A
 
 ## Features
 
-**WebSockets**: Control up to 512 channels via a single WebSocket connection.
-**Configurable**: Everything is configured in a YAML configuration file to make it easy to set up.
-**Direct fixture control**: Allows direct control of fixture channels without requiring predefined bindings.
-**Variable support in bindings**: Use variables to make them more flexible.
+- **WebSockets**: Control up to 512 channels via a single WebSocket connection.
+- **Configurable**: Everything is configured in a YAML configuration file to make it easy to set up.
+- **Direct fixture control**: Allows direct control of fixture channels without requiring predefined bindings.
+- **Variable support in bindings**: Use variables to make them more flexible.
 
 ## Installation
 
