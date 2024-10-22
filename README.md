@@ -147,7 +147,9 @@ You may want to use the [`config.yaml`](examples/dev/config.yaml) configuration 
 The `config.yaml` should have all configurations possible set and at least one example per feature.
 
 ```bash
-cargo run -- examples/dev/config.yaml
+cargo debug
+# or
+cargo run -- examples/dev/config.yaml`
 ```
 
 In case you need a debug client, you can use the [`client.html`](examples/dev/client.html) which sets up a websocket connection to `ws://localhost:3000`.
