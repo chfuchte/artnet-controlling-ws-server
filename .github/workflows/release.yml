@@ -23,21 +23,17 @@ jobs:
             matrix:
                 include:
                     # Mac OS
-                    - target: aarch64-apple-darwin # Apple Silicon
-                      os: macos-latest
-                    - target: x86_64-apple-darwin # Intel
-                      os: macos-latest
-                    - target: universal-apple-darwin # Universal
+                    # - target: aarch64-apple-darwin # Apple Silicon
+                    #   os: macos-latest
+                    # - target: x86_64-apple-darwin # Intel
+                    #   os: macos-latest
+                    - target: universal-apple-darwin # Universal (I guess)
                       os: macos-latest
                     # Windows
-                    - target: x86_64-pc-windows-msvc # 64-bit
-                      os: windows-latest
-                    - target: i686-pc-windows-msvc # 32-bit
-                      os: windows-latest
-                    - target: aarch64-pc-windows-msvc # ARM64
+                    - target: x86_64-pc-windows-msvc # 64-bit Windows
                       os: windows-latest
                     # Linux
-                    - target: x86_64-unknown-linux-gnu # 64-bit
+                    - target: x86_64-unknown-linux-gnu # 64-bit Linux
                       os: ubuntu-latest
         runs-on: ${{ matrix.os }}
         steps:
