@@ -1,0 +1,8 @@
+{
+    "git.branchProtection": ["master"],
+    "git.branchProtectionPrompt": "alwaysCommitToNewBranch",
+    "git.allowForcePush": false,
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4
+}

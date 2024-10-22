@@ -1,4 +1,4 @@
-# @copyright 2024, Christian Fuchte
+# configuration file for testing and development
 config:
     server:
       binds: 0.0.0.0:3000

@@ -11,7 +11,7 @@ A websocket-based, file-configured lighting (Art-Net) controller, written in Rus
     -   [Server Configuration](#server-configuration)
     -   [ArtNet Configuration](#artnet-configuration)
     -   [Binding with Variables](#binding-with-variables)
--   [Frontend](#frontend)
+-   [Development](#development)
 -   [License](#license)
 
 ## Installation
@@ -125,10 +125,40 @@ bindings:
 The server will replace the `{variable}` with the value from the incoming message.
 The message `something{200}` will set `fixture.channel` to `200`. (which would be the same as setting `fixture.channel` to `200` as the binding directly).
 
-## Frontend
+## Development
 
-The [frontend](frontend/) is not hosted by the server as you may replace it with your own implementation.
-The frontend is just a simple vite-based application compiling to a simple HTML file with some assets which you can open in your web browser or host it on your own.
+### Prerequisites
+
+-   [Git](https://git-scm.com/)
+-   [Rust Programming Language](https://www.rust-lang.org/tools/install)
+
+### Project Structure
+
+The project is split into multiple crates:
+
+-   `artnet`: library providing the Art-Net client
+-   `config`: library providing the configuration parsing
+-   `logger`: library providing a simple colored console logger
+-   `server`: the main binary running the server and handling the websocket connections
+
+### Running the Server
+
+You may want to use the [`config.yaml`](examples/dev/config.yaml) configuration file for testing and playing around on your local machine.
+The `config.yaml` should have all configurations possible set and at least one example per feature.
+
+```bash
+cargo run -- examples/dev/config.yaml
+```
+
+In case you need a debug client, you can use the [`client.html`](examples/dev/client.html) which sets up a websocket connection to `ws://localhost:3000`.
+
+### Testing
+
+Each crate has its own unit tests. You can run the tests with the following command either in the root directory or in the specific crate directory:
+
+```bash
+cargo test
+```
 
 ## License
 
