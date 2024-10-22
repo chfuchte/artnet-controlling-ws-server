@@ -50,3 +50,4 @@ bindings:
     - identifier: dimmer::{dim_val}
       actions:
           - par64_1.Dimmer: "{dim_val}"
+          - par64_1.White: 255
