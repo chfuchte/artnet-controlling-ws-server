@@ -1,29 +1,20 @@
-use super::{errors::ParseVariableError, WebsocketHandlingError};
+use super::WebsocketHandlingError;
 use config::Fixture;
 use regex::Regex;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, num::ParseIntError, sync::Arc};
 
 pub fn get_channel_addr(
-    action_fixture_dot_channel_str: &str,
+    fixture_name: &str,
+    channel_name: &str,
     fixtures: &Arc<HashMap<String, Fixture>>,
 ) -> Result<u16, WebsocketHandlingError> {
-    let split: Vec<&str> = action_fixture_dot_channel_str.split('.').collect();
-    if split.len() != 2 {
-        return Err(WebsocketHandlingError::InvalidActionOrDfcFormat(
-            action_fixture_dot_channel_str.to_string(),
-        ));
-    }
-
-    let fixture_name = split[0];
-    let channel_name = split[1];
-
     let fixture = fixtures
         .get(fixture_name)
         .ok_or_else(|| WebsocketHandlingError::FixtureNotFound(fixture_name.to_string()))?;
 
-    let channel_addr = fixture
-        .get_channel_addr(channel_name)
-        .ok_or_else(|| WebsocketHandlingError::ChannelNotFound(channel_name.to_string()))?;
+    let channel_addr = fixture.get_channel_addr(channel_name).ok_or_else(|| {
+        WebsocketHandlingError::ChannelNotFound(fixture_name.to_string(), channel_name.to_string())
+    })?;
 
     Ok(*channel_addr)
 }
@@ -37,7 +28,7 @@ pub fn get_channel_addr(
 pub fn extract_variables(
     msg: &str,
     identifier: &str,
-) -> Result<HashMap<String, u8>, ParseVariableError> {
+) -> Result<HashMap<String, u8>, ParseIntError> {
     let mut result: HashMap<String, u8> = HashMap::new();
     let mut var_iter = identifier
         .split('{')
@@ -46,9 +37,7 @@ pub fn extract_variables(
     let mut val_iter = msg.split('{').skip(1).map(|s| s.split('}').next().unwrap());
 
     while let (Some(variable), Some(value)) = (var_iter.next(), val_iter.next()) {
-        let parsed_value = value
-            .parse::<u8>()
-            .map_err(|e| ParseVariableError::from(e))?;
+        let parsed_value = value.parse::<u8>()?;
         result.insert(variable.to_string(), parsed_value);
     }
 
@@ -68,9 +57,9 @@ pub fn substitute_variable(
         variables
             .get(variable)
             .copied()
-            .ok_or_else(|| WebsocketHandlingError::VariableNotFound(value_str.to_string()))
+            .ok_or_else(|| WebsocketHandlingError::ExtractVariableError(value_str.to_string()))
     } else {
-        Err(WebsocketHandlingError::VariableNotFound(
+        Err(WebsocketHandlingError::ExtractVariableError(
             value_str.to_string(),
         ))
     }

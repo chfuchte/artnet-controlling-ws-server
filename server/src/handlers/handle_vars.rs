@@ -27,10 +27,17 @@ pub fn handle(
         .ok_or_else(|| WebsocketHandlingError::UnknownMessage(msg.to_string()))?;
 
     let variables: HashMap<String, u8> = extract_variables(msg, binding.get_identifier())
-        .map_err(|e| WebsocketHandlingError::VariableParseError(e))?;
+        .map_err(|e| WebsocketHandlingError::ParseVariableToNumError(e))?;
 
     for action in binding.get_actions() {
-        let addr = get_channel_addr(&action[0], &fixtures)?;
+        let parts: Vec<&str> = action[0].split('.').take(2).collect();
+        let [fixture_name, channel_name] = match parts.as_slice() {
+            [fixture_name, channel_name] => [fixture_name, channel_name],
+            _ => {
+                panic!("Invalid action format: {}", action[0]);
+            }
+        };
+        let addr = get_channel_addr(fixture_name, channel_name, &fixtures)?;
         let value = substitute_variable(&action[1], &variables)?;
         log!("Setting channel {} to value {}", addr, value);
         client.set_single(addr, value);

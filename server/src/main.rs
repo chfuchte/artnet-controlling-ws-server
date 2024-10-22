@@ -63,7 +63,7 @@ fn main() -> Result<(), Error> {
             ));
             let commit_result = artnet_client_artnet_client_commit_regulary_clone.commit();
             if let Err(err) = commit_result {
-                error!("failed to commit artnet data: {:?}", err);
+                error!("error sending artnet package: {:?}", err);
             }
         });
     }
@@ -131,16 +131,29 @@ fn main() -> Result<(), Error> {
                             .expect("failed to send a response to the client");
                     }
                     Err(err) => match err {
-                        WebsocketHandlingError::ChannelNotFound(err_str) => {
-                            warning!("channel could not be found {}", err_str);
+                        WebsocketHandlingError::ChannelNotFound(fixture_name, channel_name) => {
+                            warning!(
+                                "channel {} could not be found on fixture {}. check your config.",
+                                channel_name,
+                                fixture_name
+                            );
                             websocket
-                                .send("channel not found".into())
+                                .send(
+                                    format!(
+                                        "channel {} could not be found on fixture {}",
+                                        channel_name, fixture_name
+                                    )
+                                    .into(),
+                                )
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::FixtureNotFound(err_str) => {
-                            warning!("fixture could not be found {}", err_str);
+                        WebsocketHandlingError::FixtureNotFound(fixture_name) => {
+                            warning!(
+                                "fixture {} does not exist. check your config.",
+                                fixture_name
+                            );
                             websocket
-                                .send("fixture not found".into())
+                                .send(format!("fixture {} does not exist", fixture_name).into())
                                 .expect("failed to send a response to the client");
                         }
                         WebsocketHandlingError::DfcDisabledButMsgIsInDfcFormat => {
@@ -149,16 +162,10 @@ fn main() -> Result<(), Error> {
                                 .send("dfc is disabled but message is in dfc format".into())
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::InvalidActionOrDfcFormat(err_str) => {
-                            warning!("invalid action or dfc format at {}", err_str);
-                            websocket
-                                .send("invalid action or dfc format".into())
-                                .expect("failed to send a response to the client");
-                        }
                         WebsocketHandlingError::IoError(io_err) => {
-                            error!("io error: {:?}", io_err);
+                            error!("error sending artnet package: {:?}", io_err);
                             websocket
-                                .send("io error".into())
+                                .send("error sending artnet package".into())
                                 .expect("failed to send a response to the client");
                         }
                         WebsocketHandlingError::UnknownMessage(msg) => {
@@ -167,19 +174,16 @@ fn main() -> Result<(), Error> {
                                 .send("unknown message".into())
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::VariableNotFound(err_str) => {
-                            warning!("variable not found: {}", err_str);
+                        WebsocketHandlingError::ExtractVariableError(val) => {
+                            warning!("variable not found for: {}", val);
                             websocket
                                 .send("variable not found".into())
                                 .expect("failed to send a response to the client");
                         }
-                        WebsocketHandlingError::VariableParseError(parse_err) => {
-                            warning!(
-                                "failed to parse variable to number (u8): {:?}",
-                                parse_err.get_details()
-                            );
+                        WebsocketHandlingError::ParseVariableToNumError(parse_err) => {
+                            warning!("failed to parse variable to number (u8): {:?}", parse_err);
                             websocket
-                                .send("failed to parse variable to number".into())
+                                .send("failed to parse variable to number.".into())
                                 .expect("failed to send a response to the client");
                         }
                     },

@@ -58,12 +58,14 @@ fn concurrent_reads_and_writes() {
 fn multiple_threads_modifying_different_indices() {
     let client = get_test_client_arc();
 
-    let handles: Vec<_> = (0..10).map(|i| {
-        let client_clone = Arc::clone(&client);
-        thread::spawn(move || {
-            client_clone.set_single(i, (i + 1) as u8);
+    let handles: Vec<_> = (0..10)
+        .map(|i| {
+            let client_clone = Arc::clone(&client);
+            thread::spawn(move || {
+                client_clone.set_single(i, (i + 1) as u8);
+            })
         })
-    }).collect();
+        .collect();
 
     for handle in handles {
         handle.join().unwrap();
@@ -74,4 +76,3 @@ fn multiple_threads_modifying_different_indices() {
         assert_eq!(data[i], (i + 1) as u8);
     }
 }
- 

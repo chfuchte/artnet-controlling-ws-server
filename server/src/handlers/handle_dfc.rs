@@ -1,5 +1,4 @@
 use super::{utils::get_channel_addr, WebsocketHandlingError};
-use crate::handlers::errors::ParseVariableError;
 use artnet::ArtNetClient;
 use config::Fixture;
 use logger::log;
@@ -16,51 +15,32 @@ pub fn handle(
         Regex::new(r"^(?P<fixture>[^\.]+)\.(?P<channel>[^\.]+)=(?P<value>[0-9]+)$").unwrap();
     let captures = capture_regex
         .captures(msg)
-        .ok_or_else(|| WebsocketHandlingError::InvalidActionOrDfcFormat(msg.to_string()))?;
+        .expect(&format!("Regex should match message {}", msg));
 
     let fixture_res = captures.name("fixture");
     let channel_res = captures.name("channel");
     let value_res = captures.name("value");
 
-    let fixture_name = match fixture_res {
-        Some(fixture) => fixture.as_str(),
-        None => {
-            return Err(WebsocketHandlingError::InvalidActionOrDfcFormat(
-                msg.to_string(),
-            ));
-        }
-    };
-    let channel_name = match channel_res {
-        Some(channel) => channel.as_str(),
-        None => {
-            return Err(WebsocketHandlingError::InvalidActionOrDfcFormat(
-                msg.to_string(),
-            ));
-        }
-    };
-    let value_str = match value_res {
-        Some(value) => value.as_str(),
-        None => {
-            return Err(WebsocketHandlingError::InvalidActionOrDfcFormat(
-                msg.to_string(),
-            ));
-        }
-    };
+    let fixture_name = fixture_res
+        .expect("fixture_name should be present")
+        .as_str();
+    let channel_name = channel_res
+        .expect("channel_name should be present")
+        .as_str();
+    let value_str = value_res.expect("value should be present").as_str();
 
     let value: u8 = value_str
         .parse()
-        .map_err(|e| WebsocketHandlingError::VariableParseError(ParseVariableError::from(e)))?;
+        .map_err(|e| WebsocketHandlingError::ParseVariableToNumError(e))?;
 
-    let addr = get_channel_addr(&format!("{}.{}", fixture_name, channel_name), &fixtures);
+    let addr = get_channel_addr(fixture_name, channel_name, &fixtures)?;
 
-    if addr.is_err() {
-        return Err(WebsocketHandlingError::ChannelNotFound(
-            channel_name.to_string(),
-        ));
-    }
-    let addr = addr.unwrap();
-
-    log!("Setting channel {} to value {}", addr, value);
+    log!(
+        "Setting {} (dmx {}) to value {}",
+        &format!("{}.{}", fixture_name, channel_name),
+        addr,
+        value
+    );
     client.set_single(addr, value);
 
     // we don't need to commit the changes to the artnet nodes as this happens every n milliseconds
