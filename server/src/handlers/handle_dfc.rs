@@ -2,6 +2,7 @@ use super::{utils::get_channel_addr, WebsocketHandlingError};
 use crate::handlers::errors::ParseVariableError;
 use artnet::ArtNetClient;
 use config::Fixture;
+use logger::log;
 use regex::Regex;
 use std::{collections::HashMap, sync::Arc};
 
@@ -59,7 +60,9 @@ pub fn handle(
     }
     let addr = addr.unwrap();
 
+    log!("Setting channel {} to value {}", addr, value);
     client.set_single(addr, value);
+
     // we don't need to commit the changes to the artnet nodes as this happens every n milliseconds
     Ok(())
 }

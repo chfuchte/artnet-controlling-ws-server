@@ -75,14 +75,44 @@ fn main() -> Result<(), Error> {
         let allow_direct_fixture_control = Arc::new(config.get_allow_direct_fixture_control());
 
         thread::spawn(move || {
-            let mut websocket = accept(tcp_stream.unwrap()).unwrap();
+            let tcp_stream = match tcp_stream {
+                Ok(stream) => stream,
+                Err(err) => {
+                    error!("failed to accept incoming TCP stream: {:?}", err);
+                    return;
+                }
+            };
+            let mut websocket = match accept(tcp_stream) {
+                Ok(ws) => ws,
+                Err(err) => {
+                    error!("failed to accept WebSocket connection: {:?}", err);
+                    return;
+                }
+            };
 
             loop {
-                let msg = websocket.read().expect("failed to read socket message");
-                if msg.is_empty() || msg.is_close() || msg.is_ping() || msg.is_pong() {
+                let msg = match websocket.read() {
+                    Ok(msg) => msg,
+                    Err(err) => {
+                        error!("failed to read from WebSocket: {:?}", err);
+                        break; // Break the loop if there's an error reading from the socket
+                    }
+                };
+                if msg.is_close() {
+                    info!("WebSocket connection closed by client.");
+                    break;
+                }
+                if msg.is_empty() || msg.is_ping() || msg.is_pong() {
                     continue;
                 }
-                let ws_msg_str = msg.to_text().expect("failed to convert message to string");
+
+                let ws_msg_str = match msg.to_text() {
+                    Ok(text) => text,
+                    Err(err) => {
+                        error!("failed to convert WebSocket message to text: {:?}", err);
+                        break; // Exit loop on message parsing error
+                    }
+                };
 
                 debug!("recieved message over websocket: {}", ws_msg_str);
 

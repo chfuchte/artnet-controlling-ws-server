@@ -4,6 +4,7 @@ use super::{
 };
 use artnet::ArtNetClient;
 use config::{Binding, Fixture};
+use logger::log;
 use regex::Regex;
 use std::{collections::HashMap, sync::Arc};
 
@@ -29,9 +30,10 @@ pub fn handle(
         .map_err(|e| WebsocketHandlingError::VariableParseError(e))?;
 
     for action in binding.get_actions() {
-        let channel_addr = get_channel_addr(&action[0], &fixtures)?;
+        let addr = get_channel_addr(&action[0], &fixtures)?;
         let value = substitute_variable(&action[1], &variables)?;
-        client.set_single(channel_addr, value);
+        log!("Setting channel {} to value {}", addr, value);
+        client.set_single(addr, value);
     }
 
     // Commit all changes to the ArtNetClient
