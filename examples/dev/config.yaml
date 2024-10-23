@@ -61,7 +61,7 @@ bindings:
       - delay: 1000
         actions:
           - par64_1.White: 0
-    - identifier: effect2{1}{2}
+    - identifier: effect2{1}
       mode: alternate
       steps:
       - delay: 0
@@ -69,4 +69,4 @@ bindings:
           - par64_1.White: "{1}"
       - delay: 1000
         actions:
-          - par64_1.White: "{2}"
+          - par64_1.White: 0

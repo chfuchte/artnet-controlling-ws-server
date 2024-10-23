@@ -45,6 +45,7 @@ pub fn extract_variables(
 }
 
 /// replaces a variable in a string with its value
+/// or return the value
 pub fn substitute_variable(
     value_str: &str,
     variables: &HashMap<String, u8>,
@@ -59,8 +60,8 @@ pub fn substitute_variable(
             .copied()
             .ok_or_else(|| WebsocketHandlingError::ExtractVariableError(value_str.to_string()))
     } else {
-        Err(WebsocketHandlingError::ExtractVariableError(
-            value_str.to_string(),
-        ))
+        value_str
+            .parse::<u8>()
+            .map_err(|e| WebsocketHandlingError::ParseVariableToNumError(e))
     }
 }
