@@ -3,6 +3,7 @@ config:
     server:
       binds: 0.0.0.0:3000
       allow_direct_fixture_control: true
+      send_artnet_every_ms: 40
     artnet:
       binds: 0.0.0.0:6454
       sends: 255.255.255.255:6454

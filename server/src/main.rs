@@ -34,7 +34,7 @@ fn main() -> Result<(), Error> {
     let tcp_server_bind = config.get_server_bind();
     let tcp_server = TcpListener::bind(tcp_server_bind)
         .expect(&format!("failed to bind to {}", tcp_server_bind));
-    info!("server started: ws://{}", tcp_server_bind);
+    info!("server started and listens on ws://{}", tcp_server_bind);
 
     let send_via_artnet_udp_socket = Arc::new(
         artnet::create_socket(
@@ -53,6 +53,10 @@ fn main() -> Result<(), Error> {
     ));
 
     if config.get_send_every_ms() > 0 {
+        info!(
+            "sending artnet packages every {}ms (config.server.send_artnet_every_ms)",
+            config.get_send_every_ms()
+        );
         let artnet_client_artnet_client_commit_regulary_clone = Arc::clone(&artnet_client);
         let configuration_commit_regulary_clone = Arc::clone(&config);
         thread::spawn(move || loop {
@@ -66,6 +70,10 @@ fn main() -> Result<(), Error> {
                 error!("error sending artnet package: {:?}", err);
             }
         });
+    } else {
+        info!(
+            "regular sending of artnet packages is disabled (config.server.send_artnet_every_ms)"
+        );
     }
 
     for tcp_stream in tcp_server.incoming() {
