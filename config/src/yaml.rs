@@ -1,18 +1,24 @@
-use crate::binding::{remap_bindings, Binding};
-use crate::config::{map_config, Config};
-use crate::fixture::{remap_fixtures, Fixture};
+use crate::remaps::binding::remap_bindings;
+use crate::remaps::config::map_config;
+use crate::remaps::fixture::remap_fixtures;
 use crate::schema::Schema;
-use crate::ConfigParseError;
+use crate::{Binding, Config, ConfigParseError, Fixture};
 use std::collections::HashMap;
 
-pub fn parse_yaml_into(
+pub fn parse_yaml(
     yaml: &str,
 ) -> Result<(HashMap<String, Fixture>, HashMap<String, Binding>, Config), ConfigParseError> {
-    let config: Schema = serde_yaml::from_str(yaml).map_err(ConfigParseError::YamlError)?;
+    let parsed_configuration: Schema =
+        serde_yaml::from_str(yaml).map_err(ConfigParseError::YamlError)?;
 
-    let fixtures_map = remap_fixtures(config.fixtures, config.fixture_types)?;
-    let bindings_map: HashMap<String, Binding> = remap_bindings(config.bindings, &fixtures_map)?;
-    let config = map_config(config.config);
+    let parsed_fixtures = parsed_configuration.get_fixtures();
+    let parsed_fixture_types = parsed_configuration.get_fixture_types();
+    let parsed_bindings = parsed_configuration.get_bindings();
+    let parsed_config = parsed_configuration.get_config();
+
+    let fixtures_map = remap_fixtures(parsed_fixtures, parsed_fixture_types)?;
+    let bindings_map: HashMap<String, Binding> = remap_bindings(parsed_bindings, &fixtures_map)?;
+    let config = map_config(&parsed_config);
 
     Ok((fixtures_map, bindings_map, config))
 }

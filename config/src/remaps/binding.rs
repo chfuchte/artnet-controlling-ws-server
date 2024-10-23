@@ -1,4 +1,4 @@
-use crate::{schema::SchemaBinding, ConfigParseError, Fixture};
+use crate::{schema::bindings::BindingSchema, ConfigParseError, Fixture};
 use std::{collections::HashMap, fmt::Debug};
 
 #[derive(Debug)]
@@ -26,7 +26,7 @@ impl Binding {
 }
 
 pub fn remap_bindings(
-    bindings: Vec<SchemaBinding>,
+    bindings: &[BindingSchema],
     fixtures: &HashMap<String, Fixture>,
 ) -> Result<HashMap<String, Binding>, ConfigParseError> {
     let mut bindings_map: HashMap<String, Binding> = HashMap::new();
@@ -34,7 +34,7 @@ pub fn remap_bindings(
     for binding in bindings {
         let mut actions: Vec<[String; 2]> = Vec::new();
 
-        for action in binding.actions {
+        for action in binding.get_actions() {
             let key = action.keys().next().unwrap().clone();
             let value = action.values().next().unwrap().clone();
 
@@ -47,8 +47,8 @@ pub fn remap_bindings(
         }
 
         bindings_map.insert(
-            binding.identifier.clone(),
-            Binding::new(&binding.identifier, actions),
+            binding.get_identifier().to_string(),
+            Binding::new(&binding.get_identifier(), actions),
         );
     }
 
