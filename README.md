@@ -14,6 +14,7 @@ A configuration file-based WebSocket server providing lighting control via the A
     -   [Direct Fixture Control](#direct-fixture-control)
     -   [Bindings](#bindings)
     -   [Bindings with Variables](#bindings-with-variables)
+    -   [Bindings with Steps](#bindings-with-steps)
 -   [Development](#development)
 -   [License](#license)
 
@@ -146,6 +147,29 @@ bindings:
 
 > [!NOTE]
 > Every variable needs to be unique in a single binding although it may be used multiple times in the list of actions.
+
+### Bindings with Steps
+
+Sinse version 0.2.0 you have a new way of defining actions. Instead of setting the actions directly, you can instead define a list of steps. Each step has a `delay` and its own list of actions. The actions are working the same as in the action-format.
+The server will execute the steps in order with the given delay (in ms) before setting the values from the actions of each step.
+
+For example:
+
+```yaml
+bindings:
+    - identifier: hello_steps{variable}
+      mode: once
+      steps:
+          - delay: 100
+            actions:
+                - fixture.channel: 0
+          - delay: 100
+            actions:
+                - fixture.channel: "{variable}"
+```
+
+As you can see, you have to define a `mode` as well. The mode can be `once` or `alternate`. `once` will exectute the steps from top to bottom and then stop at the last step. `alternate` will execute the steps from top to bottom and then goes the reverse way from bottom to top and stops with the first step.
+You may also use variables and hardcoded values just as described above.
 
 ## Development
 
