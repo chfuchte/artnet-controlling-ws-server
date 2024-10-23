@@ -1,5 +1,5 @@
 use super::common::{YAML, YAML_ONLY_NECCESSARY};
-use crate::{remaps::binding::KeyframesMode, yaml::parse_yaml, Binding};
+use crate::{remaps::binding::StepsMode, yaml::parse_yaml, Binding};
 
 #[test]
 fn test_parse_fixtures() {
@@ -41,7 +41,7 @@ fn test_parse_bindings() {
 }
 
 #[test]
-fn test_parse_keyframes() {
+fn test_parse_steps() {
     let result = parse_yaml(&YAML);
     assert!(result.is_ok());
 
@@ -49,10 +49,10 @@ fn test_parse_keyframes() {
     assert!(bindings_map.get("Binding2").is_some());
     let binding = bindings_map.get("Binding2").unwrap();
     match binding {
-        Binding::WithKeyframes(bnd) => {
+        Binding::WithSteps(bnd) => {
             assert_eq!(bnd.get_identifier(), "Binding2");
             match bnd.get_mode() {
-                KeyframesMode::Once => {
+                StepsMode::Once => {
                     assert!(true)
                 }
                 _ => {

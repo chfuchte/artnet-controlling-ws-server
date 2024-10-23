@@ -2,28 +2,28 @@ use crate::{schema::bindings::BindingSchema, ConfigParseError, Fixture};
 use std::{collections::HashMap, fmt::Debug};
 
 pub enum Binding {
-    WithActions(ActionBinding),
-    WithKeyframes(KeyframeBinding),
+    WithActions(ActionsBinding),
+    WithSteps(StepsBinding),
 }
 
 impl Binding {
     pub fn get_identifier(&self) -> &str {
         match self {
             Binding::WithActions(action_binding) => action_binding.get_identifier(),
-            Binding::WithKeyframes(keyframe_binding) => keyframe_binding.get_identifier(),
+            Binding::WithSteps(steps_binding) => steps_binding.get_identifier(),
         }
     }
 }
 
 #[derive(Debug)]
-pub struct ActionBinding {
+pub struct ActionsBinding {
     identifier: String,
     actions: Vec<[String; 2]>,
 }
 
-impl ActionBinding {
-    pub(super) fn new(identifier: &str, actions: Vec<[String; 2]>) -> ActionBinding {
-        ActionBinding {
+impl ActionsBinding {
+    pub(super) fn new(identifier: &str, actions: Vec<[String; 2]>) -> ActionsBinding {
+        ActionsBinding {
             identifier: identifier.to_string(),
             actions,
         }
@@ -40,19 +40,15 @@ impl ActionBinding {
 }
 
 #[derive(Debug)]
-pub struct KeyframeBinding {
+pub struct StepsBinding {
     identifier: String,
-    mode: KeyframesMode,
-    steps: Vec<KeyframeStep>,
+    mode: StepsMode,
+    steps: Vec<StepSchema>,
 }
 
-impl KeyframeBinding {
-    pub(super) fn new(
-        identifier: &str,
-        mode: KeyframesMode,
-        steps: Vec<KeyframeStep>,
-    ) -> KeyframeBinding {
-        KeyframeBinding {
+impl StepsBinding {
+    pub(super) fn new(identifier: &str, mode: StepsMode, steps: Vec<StepSchema>) -> StepsBinding {
+        StepsBinding {
             identifier: identifier.to_string(),
             mode,
             steps,
@@ -63,23 +59,23 @@ impl KeyframeBinding {
         &self.identifier
     }
 
-    pub fn get_mode(&self) -> &KeyframesMode {
+    pub fn get_mode(&self) -> &StepsMode {
         &self.mode
     }
 
     /// [key, value]
-    pub fn get_steps(&self) -> &Vec<KeyframeStep> {
+    pub fn get_steps(&self) -> &Vec<StepSchema> {
         &self.steps
     }
 }
 
 #[derive(Debug)]
-pub struct KeyframeStep {
+pub struct StepSchema {
     delay: u64,
     actions: Vec<[String; 2]>,
 }
 
-impl KeyframeStep {
+impl StepSchema {
     pub fn get_delay(&self) -> u64 {
         self.delay
     }
@@ -91,7 +87,7 @@ impl KeyframeStep {
 }
 
 #[derive(Debug)]
-pub enum KeyframesMode {
+pub enum StepsMode {
     Alernate,
     Once,
 }
@@ -104,14 +100,13 @@ pub fn remap_bindings(
 
     for binding in bindings {
         if binding.get_mode().is_some() && binding.get_steps().is_some() {
-            // keyframes mode
             let mode = match binding.get_mode().as_ref().unwrap().as_str() {
-                "alternate" => KeyframesMode::Alernate,
-                "once" => KeyframesMode::Once,
-                mode => return Err(ConfigParseError::InvalidKeyframesMode(mode.to_string())),
+                "alternate" => StepsMode::Alernate,
+                "once" => StepsMode::Once,
+                mode => return Err(ConfigParseError::InvalidStepsMode(mode.to_string())),
             };
 
-            let mut steps: Vec<KeyframeStep> = Vec::new();
+            let mut steps: Vec<StepSchema> = Vec::new();
 
             for step in binding.get_steps().as_ref().unwrap() {
                 let mut actions: Vec<[String; 2]> = Vec::new();
@@ -128,7 +123,7 @@ pub fn remap_bindings(
                     actions.push([key, value]);
                 }
 
-                steps.push(KeyframeStep {
+                steps.push(StepSchema {
                     delay: step.get_delay(),
                     actions,
                 });
@@ -136,11 +131,7 @@ pub fn remap_bindings(
 
             bindings_map.insert(
                 binding.get_identifier().to_string(),
-                Binding::WithKeyframes(KeyframeBinding::new(
-                    &binding.get_identifier(),
-                    mode,
-                    steps,
-                )),
+                Binding::WithSteps(StepsBinding::new(&binding.get_identifier(), mode, steps)),
             );
         } else if binding.get_actions().is_some()
             && binding.get_mode().is_none()
@@ -163,10 +154,10 @@ pub fn remap_bindings(
 
             bindings_map.insert(
                 binding.get_identifier().to_string(),
-                Binding::WithActions(ActionBinding::new(&binding.get_identifier(), actions)),
+                Binding::WithActions(ActionsBinding::new(&binding.get_identifier(), actions)),
             );
         } else {
-            return Err(ConfigParseError::InvalidActionOrKeyframesBinding);
+            return Err(ConfigParseError::InvalidActionOrStepsBinding);
         }
     }
 

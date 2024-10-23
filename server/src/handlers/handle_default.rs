@@ -1,7 +1,7 @@
 use super::WebsocketHandlingError;
 use crate::handlers::utils::get_channel_addr;
 use artnet::ArtNetClient;
-use config::{Binding, Fixture, KeyframesMode};
+use config::{Binding, Fixture, StepsMode};
 use logger::log;
 use std::{collections::HashMap, sync::Arc};
 
@@ -34,8 +34,8 @@ pub fn handle(
                 return client.commit().map_err(WebsocketHandlingError::IoError);
             }
         }
-        Binding::WithKeyframes(bnd) => match bnd.get_mode() {
-            KeyframesMode::Once => {
+        Binding::WithSteps(bnd) => match bnd.get_mode() {
+            StepsMode::Once => {
                 for step in bnd.get_steps().iter() {
                     std::thread::sleep(std::time::Duration::from_millis(step.get_delay()));
                     for action in step.get_actions() {
@@ -56,7 +56,7 @@ pub fn handle(
                     client.commit().map_err(WebsocketHandlingError::IoError)?;
                 }
             }
-            KeyframesMode::Alernate => {
+            StepsMode::Alernate => {
                 for step in bnd.get_steps().iter() {
                     std::thread::sleep(std::time::Duration::from_millis(step.get_delay()));
                     for action in step.get_actions() {

@@ -8,7 +8,7 @@ pub(crate) struct BindingSchema {
     actions: Option<Vec<HashMap<String, String>>>,
     /// once, alternate, random, repeat
     mode: Option<String>,
-    steps: Option<Vec<BindingKeyframesSteps>>,
+    steps: Option<Vec<BindingSteps>>,
 }
 
 impl BindingSchema {
@@ -25,19 +25,19 @@ impl BindingSchema {
         &self.mode
     }
 
-    pub fn get_steps(&self) -> &Option<Vec<BindingKeyframesSteps>> {
+    pub fn get_steps(&self) -> &Option<Vec<BindingSteps>> {
         &self.steps
     }
 }
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct BindingKeyframesSteps {
+pub(crate) struct BindingSteps {
     /// delay between last and this step (ms)
     delay: u64,
     actions: Vec<HashMap<String, String>>,
 }
 
-impl BindingKeyframesSteps {
+impl BindingSteps {
     pub fn get_delay(&self) -> u64 {
         self.delay
     }
