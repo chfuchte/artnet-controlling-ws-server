@@ -1,15 +1,13 @@
 #[cfg(test)]
 mod test;
 
-mod binding;
-mod config;
 mod errors;
-mod fixture;
+mod remaps;
 mod schema;
 
 pub mod yaml;
 
-pub use binding::Binding;
-pub use config::Config;
 pub use errors::ConfigParseError;
-pub use fixture::Fixture;
+pub use remaps::binding::{Binding, StepsMode};
+pub use remaps::config::Config;
+pub use remaps::fixture::Fixture;

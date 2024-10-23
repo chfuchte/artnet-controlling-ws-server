@@ -14,15 +14,16 @@ A configuration file-based WebSocket server providing lighting control via the A
     -   [Direct Fixture Control](#direct-fixture-control)
     -   [Bindings](#bindings)
     -   [Bindings with Variables](#bindings-with-variables)
+    -   [Bindings with Steps](#bindings-with-steps)
 -   [Development](#development)
 -   [License](#license)
 
 ## Features
 
-- **WebSockets**: Control up to 512 channels via a single WebSocket connection.
-- **Configurable**: Everything is configured in a YAML configuration file to make it easy to set up.
-- **Direct fixture control**: Allows direct control of fixture channels without requiring predefined bindings.
-- **Variable support in bindings**: Use variables to make them more flexible.
+-   **WebSockets**: Control up to 512 channels via a single WebSocket connection.
+-   **Configurable**: Everything is configured in a YAML configuration file to make it easy to set up.
+-   **Direct fixture control**: Allows direct control of fixture channels without requiring predefined bindings.
+-   **Variable support in bindings**: Use variables to make them more flexible.
 
 ## Installation
 
@@ -64,6 +65,7 @@ config:
     server:
         binds: # string (required)
         allow_direct_fixture_control: # boolean (optional) (default: false)
+        send_artnet_every_ms: # integer (optional) (default: 50)
     artnet:
         binds: # string (required)
         sends: # string (required)
@@ -91,16 +93,16 @@ bindings:
 | -------------------------------------------- | ------- | -------- | ------- | ---------------------------------------------------------------- |
 | `config.server.binds`                        | string  | yes      | -       | The TCP server binds to the given value. f.e. `0.0.0.0:3000`.    |
 | `config.server.allow_direct_fixture_control` | boolean | no       | false   | [Direct Fixture Control](#direct-fixture-control)                |
+| `config.server.send_artnet_every_ms`         | integer | no       | 50      | [Send Data regularly](#send-data-regularly)                      |
 | `config.artnet.binds`                        | string  | yes      | -       | The ArtNet client binds to the given value. f.e. `0.0.0.0:6454`. |
 | `config.artnet.sends`                        | string  | yes      | -       | address to send Art-Net packages to f.e. `0.0.0.0:6454`          |
 | `config.artnet.broadcast`                    | boolean | yes      | -       | wheather to broadcast the Art-Net packages or not                |
 | `config.artnet.universe`                     | integer | yes      | -       | the universe configured in the Art-Net node                      |
-| `config.artnet.send_every_ms`                | integer | no       | 50      | [Send Data regularly](#send-data-regularly)                      |
 
 ### Send Data regularly
 
 The server sends the Art-Net packages every n milliseconds, regardless of the changes. This can be useful keep the chances of package loss low.
-The default is every 50 milliseconds and can be changed at `config.artnet.send_every_ms`. You can disable this feature by setting the value to `0`.
+The default is every 50 milliseconds and can be changed at `config.server.send_artnet_every_ms`. You can disable this feature by setting the value to `0`.
 
 > [!IMPORTANT]
 > If you want to use [direct_fixture_control](#direct-fixture-control) you are not able to disable this feature as direct fixture control does not send every single channel change directly (other as bindings do).
@@ -145,6 +147,29 @@ bindings:
 
 > [!NOTE]
 > Every variable needs to be unique in a single binding although it may be used multiple times in the list of actions.
+
+### Bindings with Steps
+
+Sinse version 0.2.0 you have a new way of defining actions. Instead of setting the actions directly, you can instead define a list of steps. Each step has a `delay` and its own list of actions. The actions are working the same as in the action-format.
+The server will execute the steps in order with the given delay (in ms) before setting the values from the actions of each step.
+
+For example:
+
+```yaml
+bindings:
+    - identifier: hello_steps{variable}
+      mode: once
+      steps:
+          - delay: 100
+            actions:
+                - fixture.channel: 0
+          - delay: 100
+            actions:
+                - fixture.channel: "{variable}"
+```
+
+As you can see, you have to define a `mode` as well. The mode can be `once` or `alternate`. `once` will exectute the steps from top to bottom and then stop at the last step. `alternate` will execute the steps from top to bottom and then goes the reverse way from bottom to top and stops with the first step.
+You may also use variables and hardcoded values just as described above.
 
 ## Development
 

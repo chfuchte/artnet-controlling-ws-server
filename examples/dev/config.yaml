@@ -3,6 +3,7 @@ config:
     server:
       binds: 0.0.0.0:3000
       allow_direct_fixture_control: true
+      send_artnet_every_ms: 40
     artnet:
       binds: 0.0.0.0:6454
       sends: 255.255.255.255:6454
@@ -49,5 +50,23 @@ bindings:
           - par64_1.Blue: "{blue}"
     - identifier: dimmer::{dim_val}
       actions:
-          - par64_1.Dimmer: "{dim_val}"
+      - par64_1.Dimmer: "{dim_val}"
+      - par64_1.White: 255
+    - identifier: effect
+      mode: once
+      steps:
+      - delay: 0
+        actions:
           - par64_1.White: 255
+      - delay: 1000
+        actions:
+          - par64_1.White: 0
+    - identifier: effect2{1}
+      mode: alternate
+      steps:
+      - delay: 0
+        actions:
+          - par64_1.White: "{1}"
+      - delay: 1000
+        actions:
+          - par64_1.White: 0

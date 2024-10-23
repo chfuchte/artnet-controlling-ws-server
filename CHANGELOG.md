@@ -37,3 +37,29 @@ The first release.
 ### Security
 
 -   N/A
+
+## [0.2.0] - 2024-10-23
+
+### Added
+
+-   new method to define bindings: **steps** for sequential actions in a binding (full details in the README documentation)
+
+### Changed
+
+-   `send_artnet_every_ms` (known in version 0.1 as `send_every_ms`) is now moved to `config.server` instead of `config.artnet`
+
+### Deprecated
+
+-   N/A
+
+### Removed
+
+-   prebuilts for 32-bit systems
+
+### Fixed
+
+-   error handling
+
+### Security
+
+-   N/A

@@ -5,6 +5,9 @@ pub enum ConfigParseError {
     BindingFixtureChannelDoesNotExist(String),
     /// fixture_type, fixture
     FixtureTypeNotFound(String, String),
+    InvalidActionOrStepsBinding,
+    /// mode
+    InvalidStepsMode(String),
 }
 
 impl ToString for ConfigParseError {
@@ -19,6 +22,12 @@ impl ToString for ConfigParseError {
                     "fixture type {} does not exists at fixture {}",
                     fixture_type, fixture
                 )
+            }
+            ConfigParseError::InvalidActionOrStepsBinding => {
+                format!("invalid binding: in action mode neither mode or steps are not allowed and in steps mode action is not allowed")
+            }
+            ConfigParseError::InvalidStepsMode(mode) => {
+                format!("{} is not a valid mode. use alternate or once", mode)
             }
         }
     }

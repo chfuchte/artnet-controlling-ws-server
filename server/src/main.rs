@@ -1,5 +1,5 @@
 use artnet::ArtNetClient;
-use config::{yaml::parse_yaml_into, Binding, Config, Fixture};
+use config::{yaml::parse_yaml, Binding, Config, Fixture};
 use core::panic;
 use handlers::{handle_websocket_message, WebsocketHandlingError};
 use logger::{debug, error, info, warning};
@@ -19,7 +19,7 @@ fn main() -> Result<(), Error> {
 
     {
         let dfc_allowed = config.get_allow_direct_fixture_control();
-        let commit_every_ms = config.get_send_every_ms().unwrap_or(50);
+        let commit_every_ms = config.get_send_every_ms();
         if dfc_allowed && commit_every_ms == 0 {
             panic!("direct fixture control is enabled but commit_every_ms is set to 0");
         }
@@ -34,7 +34,7 @@ fn main() -> Result<(), Error> {
     let tcp_server_bind = config.get_server_bind();
     let tcp_server = TcpListener::bind(tcp_server_bind)
         .expect(&format!("failed to bind to {}", tcp_server_bind));
-    info!("server started: ws://{}", tcp_server_bind);
+    info!("server started and listens on ws://{}", tcp_server_bind);
 
     let send_via_artnet_udp_socket = Arc::new(
         artnet::create_socket(
@@ -52,20 +52,28 @@ fn main() -> Result<(), Error> {
         config.get_artnet_universe(),
     ));
 
-    if config.get_send_every_ms().is_some() {
+    if config.get_send_every_ms() > 0 {
+        info!(
+            "sending artnet packages every {}ms (config.server.send_artnet_every_ms)",
+            config.get_send_every_ms()
+        );
         let artnet_client_artnet_client_commit_regulary_clone = Arc::clone(&artnet_client);
         let configuration_commit_regulary_clone = Arc::clone(&config);
         thread::spawn(move || loop {
             thread::sleep(Duration::from_millis(
                 configuration_commit_regulary_clone
                     .get_send_every_ms()
-                    .unwrap(),
+                    .into(),
             ));
             let commit_result = artnet_client_artnet_client_commit_regulary_clone.commit();
             if let Err(err) = commit_result {
                 error!("error sending artnet package: {:?}", err);
             }
         });
+    } else {
+        info!(
+            "regular sending of artnet packages is disabled (config.server.send_artnet_every_ms)"
+        );
     }
 
     for tcp_stream in tcp_server.incoming() {
@@ -212,7 +220,7 @@ fn read_parse_config_file() -> (
     let config_file_content_str = read_to_string(&config_file_path)
         .expect("failed to read configuration file. Does file exist?");
 
-    let (fixtures, bindings, config) = match parse_yaml_into(&config_file_content_str) {
+    let (fixtures, bindings, config) = match parse_yaml(&config_file_content_str) {
         Ok(result) => result,
         Err(err) => {
             panic!("failed to parse configuration file: {:?}", err);
