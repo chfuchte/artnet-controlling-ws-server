@@ -21,6 +21,12 @@ pub const YAML: &str = r#"
         - identifier: Binding1
           actions:
           - Fixture1.Channel1: 1
+        - identifier: Binding2
+          mode: once
+          steps:
+            - delay: 1000
+              actions:
+                - Fixture1.Channel1: 255
     "#;
 
 pub const YAML_ONLY_NECCESSARY: &str = r#"
@@ -44,4 +50,10 @@ pub const YAML_ONLY_NECCESSARY: &str = r#"
         - identifier: Binding1
           actions:
           - Fixture1.Channel1: 1
+        - identifier: Binding2
+          mode: once
+          steps:
+            - delay: 1000
+              actions:
+                - Fixture1.Channel1: 255
     "#;

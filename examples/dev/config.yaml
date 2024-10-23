@@ -50,5 +50,23 @@ bindings:
           - par64_1.Blue: "{blue}"
     - identifier: dimmer::{dim_val}
       actions:
-          - par64_1.Dimmer: "{dim_val}"
+      - par64_1.Dimmer: "{dim_val}"
+      - par64_1.White: 255
+    - identifier: effect
+      mode: once
+      steps:
+      - delay: 0
+        actions:
           - par64_1.White: 255
+      - delay: 1000
+        actions:
+          - par64_1.White: 0
+    - identifier: effect2{1}{2}
+      mode: alternate
+      steps:
+      - delay: 0
+        actions:
+          - par64_1.White: "{1}"
+      - delay: 1000
+        actions:
+          - par64_1.White: "{2}"

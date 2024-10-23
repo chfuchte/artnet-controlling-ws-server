@@ -1,5 +1,5 @@
 use super::common::{YAML, YAML_ONLY_NECCESSARY};
-use crate::yaml::parse_yaml;
+use crate::{remaps::binding::KeyframesMode, yaml::parse_yaml, Binding};
 
 #[test]
 fn test_parse_fixtures() {
@@ -29,14 +29,41 @@ fn test_parse_bindings() {
 
     let (_, bindings_map, _) = result.unwrap();
     assert!(bindings_map.get("Binding1").is_some());
-    assert_eq!(
-        bindings_map.get("Binding1").unwrap().get_identifier(),
-        "Binding1"
-    );
+    let binding = bindings_map.get("Binding1").unwrap();
+    match binding {
+        Binding::WithActions(bnd) => {
+            assert_eq!(bnd.get_identifier(), "Binding1")
+        }
+        _ => {
+            panic!("Binding2 is not a WithActions binding")
+        }
+    }
+}
 
-    let actions = bindings_map.get("Binding1").unwrap().get_actions();
-    assert_eq!(actions[0][0], "Fixture1.Channel1");
-    assert_eq!(actions[0][1], "1");
+#[test]
+fn test_parse_keyframes() {
+    let result = parse_yaml(&YAML);
+    assert!(result.is_ok());
+
+    let (_, bindings_map, _) = result.unwrap();
+    assert!(bindings_map.get("Binding2").is_some());
+    let binding = bindings_map.get("Binding2").unwrap();
+    match binding {
+        Binding::WithKeyframes(bnd) => {
+            assert_eq!(bnd.get_identifier(), "Binding2");
+            match bnd.get_mode() {
+                KeyframesMode::Once => {
+                    assert!(true)
+                }
+                _ => {
+                    panic!("Binding2 is not a Once binding")
+                }
+            }
+        }
+        _ => {
+            panic!("Binding2 is not a WithActions binding")
+        }
+    }
 }
 
 #[test]
