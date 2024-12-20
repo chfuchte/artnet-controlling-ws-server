@@ -13,11 +13,11 @@ pub enum LogLevel {
 impl ToString for LogLevel {
     fn to_string(&self) -> String {
         match self {
-            LogLevel::Log => String::from("LOG"),
-            LogLevel::Debug => String::from("DEBUG"),
-            LogLevel::Info => String::from("INFO"),
+            LogLevel::Log => String::from("LOG    "),
+            LogLevel::Debug => String::from("DEBUG  "),
+            LogLevel::Info => String::from("INFO   "),
             LogLevel::Warning => String::from("WARNING"),
-            LogLevel::Error => String::from("ERROR"),
+            LogLevel::Error => String::from("ERROR  "),
         }
     }
 }
